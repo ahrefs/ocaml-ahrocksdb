@@ -1,0 +1,8 @@
+(library
+ ((name rocksdb)
+   (public_name rocksdb)
+     (libraries (rocksdb.ffi))
+       (preprocess (pps (ppx_sexp_conv)))
+       ))
+
+(jbuild_version 1)

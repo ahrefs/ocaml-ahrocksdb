@@ -1,0 +1,7 @@
+(jbuild_version 1)
+
+(library
+ ((name rocksdb_bindings)
+   (synopsis "Ctypes bindings that describe the librocksdb FFI")
+     (public_name rocksdb.bindings)
+     (libraries (ctypes.stubs ctypes))))
