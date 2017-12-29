@@ -56,6 +56,25 @@ module M(F: Cstubs.FOREIGN) = struct
     let set_compression =
       foreign "rocksdb_options_set_compression" C.(options @-> compression_view @-> returning void)
 
+    let set_error_if_exists =
+      foreign "rocksdb_options_set_error_if_exists" C.(options @-> Views.bool_to_uchar @-> returning void)
+
+    let set_create_if_missing =
+      foreign "rocksdb_options_set_create_if_missing" C.(options @-> Views.bool_to_uchar @-> returning void)
+
+  end
+
+  module Rocksdb = struct
+
+    type t = unit C.ptr
+    let t : t C.typ = C.ptr C.void
+
+    let open_ =
+      foreign "rocksdb_open" C.(Options.options @-> string @-> ptr string_opt @-> returning t)
+
+    let close =
+      foreign "rocksdb_close" C.(t @-> returning void)
+
   end
 
 end
