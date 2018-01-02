@@ -20,6 +20,45 @@ let write_one () =
     | `Error err -> Error err
   end
 
+let update_one () =
+  Utils.with_tmp_dir begin fun name ->
+    let options = Options.options_of_config Options.default in
+    open_db ~create:true ~options ~name
+    >>= fun db ->
+    let write_options = Write_options.create () in
+    let key = "cyber" in
+    let value = "llama" in
+    put db write_options ~key ~value
+    >>= fun () ->
+    let value2 = "llama2" in
+    put db write_options ~key ~value:value2
+    >>= fun () ->
+    let read_options = Read_options.create () in
+    match get db read_options key with
+    | `Ok value' -> if String.equal value2 value' then Ok () else Error (sprintf "Wrong value retrieved: %s expected %s" value' value2)
+    | `Not_found -> Error (sprintf "key %s not found" key)
+    | `Error err -> Error err
+  end
+
+let delete_one () =
+  Utils.with_tmp_dir begin fun name ->
+    let options = Options.options_of_config Options.default in
+    open_db ~create:true ~options ~name
+    >>= fun db ->
+    let write_options = Write_options.create () in
+    let key = "cyber" in
+    let value = "llama" in
+    put db write_options ~key ~value
+    >>= fun () ->
+    delete db write_options key
+    >>= fun () ->
+    let read_options = Read_options.create () in
+    match get db read_options key with
+    | `Ok _ -> Error "delete_one"
+    | `Not_found -> Ok ()
+    | `Error err -> Error err
+  end
+
 let write_one_err () =
   Utils.with_tmp_dir begin fun name ->
     let options = Options.options_of_config Options.default in
@@ -95,4 +134,6 @@ let tests = [
   "write_one_err", write_one_err;
   "write_many", write_many;
   "write_batch_many", write_batch_many;
+  "delete_one", delete_one;
+  "update_one", update_one;
 ]
