@@ -37,3 +37,14 @@ end
 val put : db -> Write_options.t -> key:string -> value:string -> (unit, string) result
 val delete : db -> Write_options.t -> string -> (unit, string) result
 val get : db -> Read_options.t -> string -> [ `Error of string | `Not_found | `Ok of string ]
+
+module Batch : sig
+
+  type t
+
+  val create : unit -> t
+  val put : t -> key:string -> value:string -> unit
+  val write : db -> Write_options.t -> t -> (unit, string) result
+  val simple_write_batch : db -> Write_options.t -> (string * string) list -> (unit, string) result
+
+end

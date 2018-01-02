@@ -123,7 +123,7 @@ module Batch = struct
     Gc.finalise Batch.destroy t;
     t
 
-  let put batch key value =
+  let put batch ~key ~value =
     let key_len = String.length key in
     let value_len = String.length value in
     Batch.put batch (ocaml_string_start key) key_len (ocaml_string_start value) value_len
@@ -133,6 +133,6 @@ module Batch = struct
   let simple_write_batch db write_options elts =
     let batch = create () in
     List.iter (fun (key, value) -> put batch key value) elts;
-    write batch
+    write db write_options batch
 
 end
