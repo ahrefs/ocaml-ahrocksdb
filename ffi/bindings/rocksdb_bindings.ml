@@ -1,4 +1,3 @@
-
 module M(F: Cstubs.FOREIGN) = struct
 
   module V = Views
@@ -41,28 +40,28 @@ module M(F: Cstubs.FOREIGN) = struct
       foreign "rocksdb_options_set_compression" C.(options @-> compression_view @-> returning void)
 
     let set_error_if_exists =
-      foreign "rocksdb_options_set_error_if_exists" C.(options @-> Views.bool_to_uchar @-> returning void)
+      foreign "rocksdb_options_set_error_if_exists" C.(options @-> bool_to_uchar @-> returning void)
 
     let set_create_if_missing =
-      foreign "rocksdb_options_set_create_if_missing" C.(options @-> Views.bool_to_uchar @-> returning void)
+      foreign "rocksdb_options_set_create_if_missing" C.(options @-> bool_to_uchar @-> returning void)
 
     let set_paranoid_checks =
-      foreign "rocksdb_options_set_paranoid_checks" C.(options @-> Views.bool_to_uchar @-> returning void)
+      foreign "rocksdb_options_set_paranoid_checks" C.(options @-> bool_to_uchar @-> returning void)
 
     let set_max_background_flushes =
-      foreign ("rocksdb_options_set_max_background_flushes") C.(options @-> int @-> returning void)
+      foreign ("rocksdb_options_set_max_background_flushes") C.(options @-> bool_to_int @-> returning void)
 
     let set_disable_auto_compactions =
-      foreign "rocksdb_options_set_disable_auto_compactions" C.(options @-> int @-> returning void)
+      foreign "rocksdb_options_set_disable_auto_compactions" C.(options @-> bool_to_int @-> returning void)
 
     let set_level0_file_num_compaction_trigger =
-      foreign "rocksdb_options_set_level0_file_num_compaction_trigger" C.(options @-> Views.int_to_size_t @-> returning void)
+      foreign "rocksdb_options_set_level0_file_num_compaction_trigger" C.(options @-> int_to_size_t @-> returning void)
 
     let set_level0_slowdown_writes_trigger =
-      foreign "rocksdb_options_set_level0_slowdown_writes_trigger" C.(options @-> Views.int_to_size_t @-> returning void)
+      foreign "rocksdb_options_set_level0_slowdown_writes_trigger" C.(options @-> int_to_size_t @-> returning void)
 
     let set_level0_stop_writes_trigger =
-      foreign "rocksdb_options_set_level0_stop_writes_trigger" C.(options @-> Views.int_to_size_t @-> returning void)
+      foreign "rocksdb_options_set_level0_stop_writes_trigger" C.(options @-> int_to_size_t @-> returning void)
 
   end
 
@@ -89,7 +88,7 @@ module M(F: Cstubs.FOREIGN) = struct
         foreign "rocksdb_writeoptions_destroy" C.(t @-> returning void)
 
       let set_sync =
-        foreign "rocksdb_writeoptions_set_sync" C.(t @-> Views.bool_to_uchar @-> returning void)
+        foreign "rocksdb_writeoptions_set_sync" C.(t @-> bool_to_uchar @-> returning void)
 
       (* not in rocksdb-4.5fb: disabled  *)
 
@@ -119,13 +118,13 @@ module M(F: Cstubs.FOREIGN) = struct
         foreign "rocksdb_readoptions_destroy" C.(t @-> returning void)
 
       let set_verify_checksums =
-        foreign "rocksdb_readoptions_set_verify_checksums" C.(t @-> Views.bool_to_uchar @-> returning void)
+        foreign "rocksdb_readoptions_set_verify_checksums" C.(t @-> bool_to_uchar @-> returning void)
 
       let set_fill_cache =
-        foreign "rocksdb_readoptions_set_fill_cache" C.(t @-> Views.bool_to_uchar @-> returning void)
+        foreign "rocksdb_readoptions_set_fill_cache" C.(t @-> bool_to_uchar @-> returning void)
 
       let set_tailing =
-        foreign "rocksdb_readoptions_set_tailing" C.(t @-> Views.bool_to_uchar @-> returning void)
+        foreign "rocksdb_readoptions_set_tailing" C.(t @-> bool_to_uchar @-> returning void)
 
     end
 
@@ -148,21 +147,21 @@ module M(F: Cstubs.FOREIGN) = struct
 
       let put =
         foreign "rocksdb_writebatch_put"
-          C.(t @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> returning void)
+          C.(t @-> ocaml_string @-> int_to_size_t @-> ocaml_string @-> int_to_size_t @-> returning void)
 
     end
 
     let put =
       foreign "rocksdb_put"
-        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
+        C.(db @-> Write_options.t @-> ocaml_string @-> int_to_size_t @-> ocaml_string @-> int_to_size_t @-> ptr string_opt @-> returning void)
 
     let delete =
       foreign "rocksdb_delete"
-        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
+        C.(db @-> Write_options.t @-> ocaml_string @-> int_to_size_t @-> ptr string_opt @-> returning void)
 
     let get =
       foreign "rocksdb_get"
-        C.(db @-> Read_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr Views.int_to_size_t @-> ptr string_opt @-> returning (ptr char))
+        C.(db @-> Read_options.t @-> ocaml_string @-> int_to_size_t @-> ptr int_to_size_t @-> ptr string_opt @-> returning (ptr char))
 
     let write =
       foreign "rocksdb_write"

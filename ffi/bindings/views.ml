@@ -7,6 +7,13 @@ let bool_to_uchar =
     ~write:(function true -> UChar.one | false -> UChar.zero)
     uchar
 
+let bool_to_int =
+  let open Unsigned in
+  view
+    ~read:(fun u -> u <> 0)
+    ~write:(function true -> 1 | false -> 0)
+    int
+
 let compression_view =
   let read = function
     | 0 -> `No_compression
