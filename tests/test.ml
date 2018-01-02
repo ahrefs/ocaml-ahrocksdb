@@ -8,10 +8,12 @@ let t = Alcotest.(result unit error)
 let check (name, fn) = name, `Quick, (fun () -> Alcotest.check t name (Ok ()) (fn ()))
 
 let config_and_open_tests = List.map check Test_config_and_open.tests
+let writes_tests = List.map check Test_writes.tests
 
 let () =
   Alcotest.run "RocksDB binding" [
-    "config_and_open_tests", config_and_open_tests
+    "config_and_open_tests", config_and_open_tests;
+    "writes_tests", writes_tests
   ]
 (* let test_default_options = *)
 (*   let open Rocksdb in *)
