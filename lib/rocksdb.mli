@@ -104,8 +104,14 @@ module Batch : sig
   (** An opaque batch request must be created through {!create} and executed through {!write} *)
   type t
 
+  (** [create] will create a batch job to be used to batch operation on the database. *)
   val create : unit -> t
+
+
+  (** [put batch key value] will take a [batch] job and stage the writing of the [key] key and [value] value in the batch job. *)
   val put : t -> key:string -> value:string -> unit
+
+  (** [write db write_options batch] takes a [db] handle, some [write_options] and a [batch] job and execute it on the database. *)
   val write : db -> Write_options.t -> t -> (unit, string) result
 
   (** A simple helper, will take a list of key_value and do a unique batch and write it to the database *)

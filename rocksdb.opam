@@ -11,7 +11,7 @@ available: [ ocaml-version >= "4.03.0"]
 depends: [
   "jbuilder" {build & >="1.0+beta10"}
   "ctypes" {>="0.12.0"}
-  "rresult"
+  "rresult" {test}
   "bos" {test}
   "cryptokit" {test}
   "alcotest" {test}
