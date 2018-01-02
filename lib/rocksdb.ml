@@ -1,4 +1,6 @@
 module Ffi = Rocksdb_ffi.M
+module Rocksdb = Ffi.Rocksdb
+open Ctypes
 
 module Options = struct
 
@@ -25,16 +27,12 @@ module Options = struct
   }
 
   let options_of_config config =
-    let open Ctypes in
     let t = Options.create () in
     Gc.finalise Options.destroy t;
     apply_config t config;
     t
 
 end
-
-open Ctypes
-module Rocksdb = Ffi.Rocksdb
 
 module Write_options = struct
 
@@ -43,7 +41,6 @@ module Write_options = struct
   type t = Write_options.t
 
   let create ?disable_wal ?sync () =
-    let open Ctypes in
     let open Misc.Opt in
     let t = Write_options.create () in
     disable_wal >>= Write_options.disable_WAL t;
@@ -60,7 +57,6 @@ module Read_options = struct
   type t = Read_options.t
 
   let create ?verify_checksums ?fill_cache ?tailing () =
-    let open Ctypes in
     let open Misc.Opt in
     let t = Read_options.create () in
     verify_checksums >>= Read_options.set_verify_checksums t;
@@ -118,7 +114,6 @@ module Batch = struct
   type t = Batch.t
 
   let create () =
-    let open Ctypes in
     let t = Batch.create () in
     Gc.finalise Batch.destroy t;
     t

@@ -12,11 +12,6 @@ module Options : sig
 
 end
 
-type db
-
-val open_db : ?create:bool -> options:Options.options -> name:string -> (db, string) result
-val close_db : db -> unit
-
 module Write_options : sig
 
   type t
@@ -34,6 +29,10 @@ module Read_options : sig
 end
 
 
+type db
+
+val open_db : ?create:bool -> options:Options.options -> name:string -> (db, string) result
+val close_db : db -> unit
 val put : db -> Write_options.t -> key:string -> value:string -> (unit, string) result
 val delete : db -> Write_options.t -> string -> (unit, string) result
 val get : db -> Read_options.t -> string -> [ `Error of string | `Not_found | `Ok of string ]
