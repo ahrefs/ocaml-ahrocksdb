@@ -20,6 +20,7 @@ let open_not_random_setters () =
       stop_writes_trigger = Some 256;
       disable_compaction = false;
       parallelism_level = Some 4;
+      memtable_representation = Some `Vector;
     }
     in
     let options = Options.options_of_config config in

@@ -63,6 +63,12 @@ module M(F: Cstubs.FOREIGN) = struct
     let set_level0_stop_writes_trigger =
       foreign "rocksdb_options_set_level0_stop_writes_trigger" C.(options @-> int_to_size_t @-> returning void)
 
+    let set_memtable_vector_rep =
+      foreign "rocksdb_options_set_memtable_vector_rep" C.(options @-> returning void)
+
+    let prepare_for_bulk_load =
+      foreign "rocksdb_options_prepare_for_bulk_load" C.(options @-> returning void)
+
   end
 
   module Rocksdb = struct
