@@ -127,6 +127,8 @@ let get db read_options key =
       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result_ptr)) result_ptr;
       `Ok result
 
+let compact_now db = Rocksdb.compact_range db None 0 None 0
+
 module Batch = struct
 
   open Rocksdb

@@ -167,6 +167,10 @@ module M(F: Cstubs.FOREIGN) = struct
       foreign "rocksdb_write"
         C.(db @-> Write_options.t @-> Batch.t @-> ptr string_opt @-> returning void)
 
+    let compact_range =
+      foreign "rocksdb_compact_range"
+        C.(db @-> ptr_opt char @-> int @-> ptr_opt char @-> int @-> returning void)
+
     let free =
       foreign "rocksdb_free" C.(ptr void @-> returning void)
 
