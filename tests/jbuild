@@ -1,6 +1,6 @@
 (executables
  ((names (test))
-   (libraries (rocksdb rresult alcotest))
+   (libraries (rocksdb rresult bos alcotest))
    ))
 
 (alias
