@@ -8,7 +8,7 @@ module Options : sig
   }
 
   val default : config
-  val create : config:config -> options
+  val options_of_config : config -> options
 
 end
 
@@ -17,11 +17,23 @@ type db
 val open_db : ?create:bool -> options:Options.options -> name:string -> (db, string) result
 val close_db : db -> unit
 
-type wopts
-type ropts
+module Write_options : sig
 
-val init_writeoptions : db -> wopts
+  type t
 
-val put : ?wopts:wopts -> db -> key:string -> value:string -> (unit, string) result
-val delete : ?wopts:wopts -> db -> string -> (unit, string) result
-val get : db -> string -> [ `Error of string | `Not_found | `Ok of string ]
+  val create : ?disable_wal:int -> ?sync:bool -> unit -> t
+
+end
+
+module Read_options : sig
+
+  type t
+
+  val create : ?verify_checksums:bool -> ?fill_cache:bool -> ?tailing:bool -> unit -> t
+
+end
+
+
+val put : db -> Write_options.t -> key:string -> value:string -> (unit, string) result
+val delete : db -> Write_options.t -> string -> (unit, string) result
+val get : db -> Read_options.t -> string -> [ `Error of string | `Not_found | `Ok of string ]

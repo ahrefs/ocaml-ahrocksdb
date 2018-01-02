@@ -15,12 +15,7 @@ module Options = struct
       parallelism_level;
       compression;
     } =
-    let iter_opt o f =
-      match o with
-      | Some v -> f v
-      | None -> ()
-    in
-    let (>>=) = iter_opt in
+    let open Misc.Opt in
     parallelism_level >>= Options.increase_parallelism options;
     Options.set_compression options compression
 
@@ -29,7 +24,7 @@ module Options = struct
     compression = `No_compression;
   }
 
-  let create ~config =
+  let options_of_config config =
     let open Ctypes in
     let t = Options.create () in
     Gc.finalise Options.destroy t;
@@ -42,8 +37,43 @@ open Ctypes
 module Rocksdb = Ffi.Rocksdb
 
 type db = Rocksdb.db
-type ropts = Rocksdb.Read_options.t
 type wopts = Rocksdb.Write_options.t
+type ropts = Rocksdb.Read_options.t
+
+module Write_options = struct
+
+  open Rocksdb
+
+  type t = Write_options.t
+
+  let create ?disable_wal ?sync () =
+    let open Ctypes in
+    let open Misc.Opt in
+    let t = Write_options.create () in
+    disable_wal >>= Write_options.disable_WAL t;
+    sync >>= Write_options.set_sync t;
+    Gc.finalise Write_options.destroy t;
+    t
+
+end
+
+module Read_options = struct
+
+  open Rocksdb
+
+  type t = Read_options.t
+
+  let create ?verify_checksums ?fill_cache ?tailing () =
+    let open Ctypes in
+    let open Misc.Opt in
+    let t = Read_options.create () in
+    verify_checksums >>= Read_options.set_verify_checksums t;
+    fill_cache >>= Read_options.set_fill_cache t;
+    tailing >>= Read_options.set_tailing t;
+    Gc.finalise Read_options.destroy t;
+    t
+
+end
 
 let with_error_buffer fn =
   let errb = allocate string_opt None in
@@ -58,37 +88,21 @@ let open_db ?create:(create=false) ~options ~name =
 
 let close_db t = Rocksdb.close t
 
-let init_writeoptions t =
-  let open Rocksdb in
-  let wopts = Write_options.create t in
-  Gc.finalise Write_options.destroy wopts;
-  wopts
-
-let put ?wopts t ~key ~value =
-  let wopts = match wopts with
-    | Some wopts -> wopts
-    | None -> init_writeoptions t
-  in
+let put db write_options ~key ~value =
   let key_len = String.length key in
   let value_len = String.length value in
-  Rocksdb.put t wopts (ocaml_string_start key) key_len (ocaml_string_start value) value_len
+  Rocksdb.put db write_options (ocaml_string_start key) key_len (ocaml_string_start value) value_len
   |> with_error_buffer
 
-let delete ?wopts t key =
-  let wopts = match wopts with
-    | Some wopts -> wopts
-    | None -> init_writeoptions t
-  in
+let delete db write_options key =
   let key_len = String.length key in
-  Rocksdb.delete t wopts (ocaml_string_start key) key_len
+  Rocksdb.delete db write_options (ocaml_string_start key) key_len
   |> with_error_buffer
 
-let get t key =
-  let ropts = Rocksdb.Read_options.create t in
+let get db read_options key =
   let key_len = String.length key in
   let result_len = allocate Ffi.V.int_to_size_t 0 in
-  let result = with_error_buffer @@ Rocksdb.get t ropts (ocaml_string_start key) key_len result_len in
-  Rocksdb.Read_options.destroy ropts;
+  let result = with_error_buffer @@ Rocksdb.get db read_options (ocaml_string_start key) key_len result_len in
   match result with
   | Error err -> `Error err
   | Ok result_ptr ->

@@ -68,7 +68,7 @@ module M(F: Cstubs.FOREIGN) = struct
       let t : t C.typ = C.ptr C.void
 
       let create =
-        foreign "rocksdb_writeoptions_create" C.(db @-> returning t)
+        foreign "rocksdb_writeoptions_create" C.(void @-> returning t)
 
       let destroy =
         foreign "rocksdb_writeoptions_destroy" C.(t @-> returning void)
@@ -98,7 +98,7 @@ module M(F: Cstubs.FOREIGN) = struct
       let t : t C.typ = C.ptr C.void
 
       let create =
-        foreign "rocksdb_readoptions_create" C.(db @-> returning t)
+        foreign "rocksdb_readoptions_create" C.(void @-> returning t)
 
       let destroy =
         foreign "rocksdb_readoptions_destroy" C.(t @-> returning void)
@@ -113,21 +113,6 @@ module M(F: Cstubs.FOREIGN) = struct
         foreign "rocksdb_readoptions_set_tailing" C.(t @-> Views.bool_to_uchar @-> returning void)
 
     end
-
-    let put =
-      foreign "rocksdb_put"
-        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
-
-    let delete =
-      foreign "rocksdb_delete"
-        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
-
-    let get =
-      foreign "rocksdb_get"
-        C.(db @-> Read_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr Views.int_to_size_t @-> ptr string_opt @-> returning (ptr char))
-
-    let free =
-      foreign "rocksdb_free" C.(ptr void @-> returning void)
 
     module Batch = struct
 
@@ -151,6 +136,26 @@ module M(F: Cstubs.FOREIGN) = struct
           C.(t @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> returning void)
 
     end
+
+    let put =
+      foreign "rocksdb_put"
+        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
+
+    let delete =
+      foreign "rocksdb_delete"
+        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
+
+    let get =
+      foreign "rocksdb_get"
+        C.(db @-> Read_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr Views.int_to_size_t @-> ptr string_opt @-> returning (ptr char))
+
+    let write =
+      foreign "rocksdb_write"
+        C.(db @-> Write_options.t @-> Batch.t @-> ptr string_opt @-> returning void)
+
+    let free =
+      foreign "rocksdb_free" C.(ptr void @-> returning void)
+
 
   end
 
