@@ -36,10 +36,6 @@ end
 open Ctypes
 module Rocksdb = Ffi.Rocksdb
 
-type db = Rocksdb.db
-type wopts = Rocksdb.Write_options.t
-type ropts = Rocksdb.Read_options.t
-
 module Write_options = struct
 
   open Rocksdb
@@ -74,6 +70,8 @@ module Read_options = struct
     t
 
 end
+
+type db = Rocksdb.db
 
 let with_error_buffer fn =
   let errb = allocate string_opt None in
@@ -112,3 +110,29 @@ let get db read_options key =
       let result = string_from_ptr result_ptr (!@ result_len) in
       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result_ptr)) result_ptr;
       `Ok result
+
+module Batch = struct
+
+  open Rocksdb
+
+  type t = Batch.t
+
+  let create () =
+    let open Ctypes in
+    let t = Batch.create () in
+    Gc.finalise Batch.destroy t;
+    t
+
+  let put batch key value =
+    let key_len = String.length key in
+    let value_len = String.length value in
+    Batch.put batch (ocaml_string_start key) key_len (ocaml_string_start value) value_len
+
+  let write db write_options batch = Rocksdb.write db write_options batch |> with_error_buffer
+
+  let simple_write_batch db write_options elts =
+    let batch = create () in
+    List.iter (fun (key, value) -> put batch key value) elts;
+    write batch
+
+end
