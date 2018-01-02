@@ -129,6 +129,29 @@ module M(F: Cstubs.FOREIGN) = struct
     let free =
       foreign "rocksdb_free" C.(ptr void @-> returning void)
 
+    module Batch = struct
+
+      type t = unit C.ptr
+      let t : t C.typ = C.ptr C.void
+
+      let create =
+        foreign "rocksdb_writebatch_create" C.(void @-> returning t)
+
+      let destroy =
+        foreign "rocksdb_writebatch_destroy" C.(t @-> returning void)
+
+      let clear =
+        foreign "rocksdb_writebatch_clear" C.(t @-> returning void)
+
+      let count =
+        foreign "rocksdb_writebatch_count" C.(t @-> returning int)
+
+      let put =
+        foreign "rocksdb_writebatch_put"
+          C.(t @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> returning void)
+
+    end
+
   end
 
 end
