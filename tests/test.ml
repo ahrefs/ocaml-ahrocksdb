@@ -20,16 +20,16 @@ let test_open_err =
   let open Rocksdb in
   let config = Options.default in
   let options = Options.create ~config in
-  match Db.open_db ~create:false ~options ~name:"/tmp/ocaml-rocksdb-should-not-exists" with
-  | Ok handle -> Db.close_db handle; failwith "handle was opened"
+  match open_db ~create:false ~options ~name:"/tmp/ocaml-rocksdb-should-not-exists" with
+  | Ok handle -> close_db handle; failwith "handle was opened"
   | Error err -> ()
 
 let test_open =
   let open Rocksdb in
   let config = Options.default in
   let options = Options.create ~config in
-  match Db.open_db ~create:true ~options ~name:"/tmp/rocks_test" with
-  | Ok handle -> Db.close_db handle
+  match open_db ~create:true ~options ~name:"/tmp/rocks_test" with
+  | Ok handle -> close_db handle
   | Error err -> failwith err
 
 let test_wrd =
@@ -37,18 +37,18 @@ let test_wrd =
     let open Rocksdb in
     let config = Options.default in
     let options = Options.create ~config in
-    Db.open_db ~create:true ~options ~name:"/tmp/rocksrocks"
+    open_db ~create:true ~options ~name:"/tmp/rocksrocks"
     >>= fun handle ->
     let key = "llama" in
     let value = "fluffy" in
-    Db.put handle ~key ~value
+    put handle ~key ~value
     >>= fun () -> begin
-    match Db.get handle key with
+    match get handle key with
     | `Ok value_stored -> if value = value_stored then Ok () else failwith "uh"
     | _ -> failwith "lol" end
     >>= fun () ->
-    Db.delete handle key >>= fun () -> begin
-    match Db.get handle key with
+    delete handle key >>= fun () -> begin
+    match get handle key with
     | `Error _
     | `Ok _ -> failwith "uuh"
     | `Not_found -> Ok ()
