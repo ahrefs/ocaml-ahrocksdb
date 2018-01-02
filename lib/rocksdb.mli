@@ -5,6 +5,11 @@ module Options : sig
   type config = {
     parallelism_level : int option;
     compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ];
+    disable_compaction : bool;
+    max_flush_processes : int option;
+    compaction_trigger : int option;
+    slowdown_writes_trigger : int option;
+    stop_writes_trigger : int option;
   }
 
   val default : config

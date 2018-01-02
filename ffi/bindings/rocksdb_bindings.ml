@@ -49,7 +49,7 @@ module M(F: Cstubs.FOREIGN) = struct
       foreign "rocksdb_options_set_paranoid_checks" C.(options @-> bool_to_uchar @-> returning void)
 
     let set_max_background_flushes =
-      foreign ("rocksdb_options_set_max_background_flushes") C.(options @-> bool_to_int @-> returning void)
+      foreign ("rocksdb_options_set_max_background_flushes") C.(options @-> int @-> returning void)
 
     let set_disable_auto_compactions =
       foreign "rocksdb_options_set_disable_auto_compactions" C.(options @-> bool_to_int @-> returning void)
@@ -169,7 +169,6 @@ module M(F: Cstubs.FOREIGN) = struct
 
     let free =
       foreign "rocksdb_free" C.(ptr void @-> returning void)
-
 
   end
 

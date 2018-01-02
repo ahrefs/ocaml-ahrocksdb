@@ -11,19 +11,39 @@ module Options = struct
   type config = {
     parallelism_level : int option;
     compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ];
+    disable_compaction : bool;
+    max_flush_processes : int option;
+    compaction_trigger : int option;
+    slowdown_writes_trigger : int option;
+    stop_writes_trigger : int option;
   }
 
   let apply_config options {
       parallelism_level;
       compression;
+      disable_compaction;
+      max_flush_processes;
+      compaction_trigger;
+      slowdown_writes_trigger;
+      stop_writes_trigger;
     } =
     let open Misc.Opt in
     parallelism_level >>= Options.increase_parallelism options;
-    Options.set_compression options compression
+    max_flush_processes >>= Options.set_max_background_flushes options;
+    compaction_trigger >>= Options.set_level0_file_num_compaction_trigger options;
+    slowdown_writes_trigger >>= Options.set_level0_slowdown_writes_trigger options;
+    stop_writes_trigger >>= Options.set_level0_stop_writes_trigger options;
+    Options.set_compression options compression;
+    Options.set_disable_auto_compactions options disable_compaction
 
   let default = {
     parallelism_level = None;
     compression = `No_compression;
+    disable_compaction = false;
+    max_flush_processes = None;
+    compaction_trigger = None;
+    slowdown_writes_trigger = None;
+    stop_writes_trigger = None;
   }
 
   let options_of_config config =
