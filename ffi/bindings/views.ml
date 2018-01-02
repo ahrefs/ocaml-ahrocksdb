@@ -6,3 +6,31 @@ let bool_to_uchar =
     ~read:(fun u -> u <> UChar.zero)
     ~write:(function true -> UChar.one | false -> UChar.zero)
     uchar
+
+let compression_view =
+  let read = function
+    | 0 -> `No_compression
+    | 1 -> `Snappy
+    | 2 -> `Zlib
+    | 3 -> `Bz2
+    | 4 -> `Lz4
+    | 5 -> `Lz4hc
+    | other -> invalid_arg @@ Printf.sprintf "read_compression_view: invalid compression type: %d" other
+  in
+  let write = function
+    | `No_compression -> 0
+    | `Snappy -> 1
+    | `Zlib -> 2
+    | `Bz2 -> 3
+    | `Lz4 -> 4
+    | `Lz4hc -> 5
+  in
+  Ctypes.view ~read ~write Ctypes.int
+
+let int_to_uint64 =
+  let open Unsigned in
+  view ~write:UInt64.of_int ~read:UInt64.to_int Ctypes.uint64_t
+
+let int_to_size_t =
+  let open Unsigned in
+  view ~write:Size_t.of_int ~read:Size_t.to_int Ctypes.size_t

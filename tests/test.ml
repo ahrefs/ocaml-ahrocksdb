@@ -1,3 +1,5 @@
+open Rresult.R.Infix
+
 let test_default_options =
   let open Rocksdb in
   let config = Options.default in
@@ -8,9 +10,9 @@ let test_all_config_setters =
   let open Rocksdb_ffi.M in
   let options = Options.create () in
   Options.increase_parallelism options 4;
-  Options.optimize_for_point_lookup options Unsigned.UInt64.one;
-  Options.optimize_level_style_compaction options Unsigned.UInt64.one;
-  Options.optimize_universal_style_compaction options Unsigned.UInt64.one;
+  Options.optimize_for_point_lookup options 1;
+  Options.optimize_level_style_compaction options 1;
+  Options.optimize_universal_style_compaction options 1;
   Options.destroy options;
   ()
 
@@ -30,6 +32,32 @@ let test_open =
   | Ok handle -> Db.close_db handle
   | Error err -> failwith err
 
+let test_wrd =
+  let test _ =
+    let open Rocksdb in
+    let config = Options.default in
+    let options = Options.create ~config in
+    Db.open_db ~create:true ~options ~name:"/tmp/rocksrocks"
+    >>= fun handle ->
+    let key = "llama" in
+    let value = "fluffy" in
+    Db.put handle ~key ~value
+    >>= fun () -> begin
+    match Db.get handle key with
+    | `Ok value_stored -> if value = value_stored then Ok () else failwith "uh"
+    | _ -> failwith "lol" end
+    >>= fun () ->
+    Db.delete handle key >>= fun () -> begin
+    match Db.get handle key with
+    | `Error _
+    | `Ok _ -> failwith "uuh"
+    | `Not_found -> Ok ()
+  end
+  in
+  match test () with
+  | Ok () -> ()
+  | _ -> failwith "fail"
+
 let test_options =
   [
     "Testing default options", `Quick, (fun () -> Alcotest.(check unit) "default options" () test_default_options);
@@ -42,8 +70,14 @@ let test_open =
     "Testing simple handle opening", `Quick, (fun () -> Alcotest.(check unit) "open" () test_open);
   ]
 
+let test_wrd =
+  [
+    "Testing simple write/read/delete scenario", `Quick, (fun () -> Alcotest.(check unit) "wrd test" () test_wrd);
+  ]
+
 let () =
   Alcotest.run "ocaml-rocksdb" [
     "Test default options", test_options;
-    "Test open database", test_open
+    "Test open database", test_open;
+    "Test simple write read delete", test_wrd;
   ]
