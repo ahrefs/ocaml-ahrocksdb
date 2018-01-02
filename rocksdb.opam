@@ -12,12 +12,14 @@ depends: [
   "jbuilder" {build & >="1.0+beta10"}
   "ctypes" {>="0.12.0"}
   "rresult"
-  "bos"
+  "bos" {test}
+  "cryptokit" {test}
+  "alcotest" {test}
 ]
 build: [
-       ["jbuilder" "subst" "-p" name "--name" name] {pinned}
-       ["jbuilder" "build" "-p" name "-j" jobs]
-       ]
+  ["jbuilder" "subst" "-p" name "--name" name] {pinned}
+  ["jbuilder" "build" "-p" name "-j" jobs]
+]
 build-test: [
   ["jbuilder" "runtest"]
 ]
