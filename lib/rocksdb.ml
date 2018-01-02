@@ -41,9 +41,9 @@ end
 open Ctypes
 module Rocksdb = Ffi.Rocksdb
 
-type t = Rocksdb.t
-type ropts = Rocksdb.ropts
-type wopts = Rocksdb.wopts
+type db = Rocksdb.db
+type ropts = Rocksdb.Read_options.t
+type wopts = Rocksdb.Write_options.t
 
 let with_error_buffer fn =
   let errb = allocate string_opt None in
@@ -59,8 +59,9 @@ let open_db ?create:(create=false) ~options ~name =
 let close_db t = Rocksdb.close t
 
 let init_writeoptions t =
-  let wopts = Rocksdb.write_options_create t in
-  Gc.finalise Rocksdb.write_options_destroy wopts;
+  let open Rocksdb in
+  let wopts = Write_options.create t in
+  Gc.finalise Write_options.destroy wopts;
   wopts
 
 let put ?wopts t ~key ~value =
@@ -83,11 +84,11 @@ let delete ?wopts t key =
   |> with_error_buffer
 
 let get t key =
-  let ropts = Rocksdb.read_options_create t in
+  let ropts = Rocksdb.Read_options.create t in
   let key_len = String.length key in
   let result_len = allocate Ffi.V.int_to_size_t 0 in
   let result = with_error_buffer @@ Rocksdb.get t ropts (ocaml_string_start key) key_len result_len in
-  Rocksdb.read_options_destroy ropts;
+  Rocksdb.Read_options.destroy ropts;
   match result with
   | Error err -> `Error err
   | Ok result_ptr ->

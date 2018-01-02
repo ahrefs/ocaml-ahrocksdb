@@ -53,45 +53,82 @@ module M(F: Cstubs.FOREIGN) = struct
 
   module Rocksdb = struct
 
-    type t = unit C.ptr
-    let t : t C.typ = C.ptr C.void
+    type db = unit C.ptr
+    let db : db C.typ = C.ptr C.void
 
     let open_ =
-      foreign "rocksdb_open" C.(Options.options @-> string @-> ptr string_opt @-> returning t)
+      foreign "rocksdb_open" C.(Options.options @-> string @-> ptr string_opt @-> returning db)
 
     let close =
-      foreign "rocksdb_close" C.(t @-> returning void)
+      foreign "rocksdb_close" C.(db @-> returning void)
 
-    type wopts = unit C.ptr
-    let wopts : wopts C.typ = C.ptr C.void
+    module Write_options = struct
 
-    let write_options_create =
-      foreign "rocksdb_writeoptions_create" C.(t @-> returning wopts)
+      type t = unit C.ptr
+      let t : t C.typ = C.ptr C.void
 
-    let write_options_destroy =
-      foreign "rocksdb_writeoptions_destroy" C.(wopts @-> returning void)
+      let create =
+        foreign "rocksdb_writeoptions_create" C.(db @-> returning t)
+
+      let destroy =
+        foreign "rocksdb_writeoptions_destroy" C.(t @-> returning void)
+
+      let set_sync =
+        foreign "rocksdb_writeoptions_set_sync" C.(t @-> Views.bool_to_uchar @-> returning void)
+
+      (* not in rocksdb-4.5fb: disabled  *)
+
+      (* let set_ignore_missing_column_families = *)
+      (*   foreign "rocksdb_writeoptions_set_ignore_missing_column_families" C.(t @-> Views.bool_to_uchar @-> returning void) *)
+
+      (* let set_no_slowdown = *)
+      (*   foreign "rocksdb_writeoptions_set_no_slowdown" C.(t @-> Views.bool_to_uchar @-> returning void) *)
+
+      (* let set_low_pri = *)
+      (*   foreign "rocksdb_writeoptions_set_low_pri" C.(t @-> Views.bool_to_uchar @-> returning void) *)
+
+      let disable_WAL =
+        foreign "rocksdb_writeoptions_disable_WAL" C.(t @-> int @-> returning void)
+
+    end
+
+    module Read_options = struct
+
+      type t = unit C.ptr
+      let t : t C.typ = C.ptr C.void
+
+      let create =
+        foreign "rocksdb_readoptions_create" C.(db @-> returning t)
+
+      let destroy =
+        foreign "rocksdb_readoptions_destroy" C.(t @-> returning void)
+
+      let set_verify_checksums =
+        foreign "rocksdb_readoptions_set_verify_checksums" C.(t @-> Views.bool_to_uchar @-> returning void)
+
+      let set_fill_cache =
+        foreign "rocksdb_readoptions_set_fill_cache" C.(t @-> Views.bool_to_uchar @-> returning void)
+
+      let set_tailing =
+        foreign "rocksdb_readoptions_set_tailing" C.(t @-> Views.bool_to_uchar @-> returning void)
+
+    end
 
     let put =
       foreign "rocksdb_put"
-        C.(t @-> wopts @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
+        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
+
     let delete =
       foreign "rocksdb_delete"
-        C.(t @-> wopts @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
-
-    type ropts = unit C.ptr
-    let ropts : ropts C.typ = C.ptr C.void
-
-    let read_options_create =
-      foreign "rocksdb_readoptions_create" C.(t @-> returning ropts)
-
-    let read_options_destroy =
-      foreign "rocksdb_readoptions_destroy" C.(ropts @-> returning void)
+        C.(db @-> Write_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr string_opt @-> returning void)
 
     let get =
       foreign "rocksdb_get"
-        C.(t @-> ropts @-> ocaml_string @-> Views.int_to_size_t @-> ptr Views.int_to_size_t @-> ptr string_opt @-> returning (ptr char))
+        C.(db @-> Read_options.t @-> ocaml_string @-> Views.int_to_size_t @-> ptr Views.int_to_size_t @-> ptr string_opt @-> returning (ptr char))
+
     let free =
       foreign "rocksdb_free" C.(ptr void @-> returning void)
+
   end
 
 end
