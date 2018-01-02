@@ -171,6 +171,11 @@ module M(F: Cstubs.FOREIGN) = struct
       foreign "rocksdb_compact_range"
         C.(db @-> ptr_opt char @-> int @-> ptr_opt char @-> int @-> returning void)
 
+    let property_value =
+      foreign
+        "rocksdb_property_value"
+        C.(db @-> string @-> returning (ptr_opt char))
+
     let free =
       foreign "rocksdb_free" C.(ptr void @-> returning void)
 

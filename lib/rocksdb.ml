@@ -129,6 +129,14 @@ let get db read_options key =
 
 let compact_now db = Rocksdb.compact_range db None 0 None 0
 
+let stats db =
+  match Rocksdb.property_value db "rocksdb.stats" with
+  | None -> None
+  | Some stats ->
+    let string = coerce (ptr char) string stats in
+    Gc.finalise (fun stats -> Rocksdb.free (to_voidp stats)) stats;
+    Some string
+
 module Batch = struct
 
   open Rocksdb

@@ -98,6 +98,9 @@ val get : db -> Read_options.t -> string -> [ `Error of string | `Not_found | `O
 val compact_now : db -> unit
 (** [compact_now db] will initiate a compaction on all ranges available in database. This is an asynchronous operation, returning unit once operation is started. *)
 
+val stats : db -> string option
+(** [stats db] will return the accumulated stats for this database handle as an optional string form *)
+
 (** Batch processing
     RocksDB allows to batch operations through a dedicated batch object that must be fed to {!write}.
     A batch object {!Batch.t} is a collection of operation to run on a database. (like {!Batch.put} or delete).
