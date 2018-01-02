@@ -49,6 +49,24 @@ let get_random_kvalues n =
   in
   aux [] n
 
+let write_batch_many () =
+  let kvs = get_random_kvalues 10_000 in
+  Utils.with_tmp_dir begin fun name ->
+    let options = Options.options_of_config Options.default in
+    open_db ~create:true ~options ~name
+    >>= fun db ->
+    let write_options = Write_options.create () in
+    Batch.simple_write_batch db write_options kvs;
+    >>= fun () ->
+    let read_options = Read_options.create () in
+    List.fold_left begin fun r (key, value) ->
+      r >>= fun () ->
+      match get db read_options key with
+      | `Ok value' -> if String.equal value value' then Ok () else Error "write_many: bad value"
+      | `Not_found -> Error "write_many"
+      | `Error err -> Error err
+    end (Ok ()) kvs
+  end
 
 let write_many () =
   Utils.with_tmp_dir begin fun name ->
@@ -66,8 +84,8 @@ let write_many () =
     List.fold_left begin fun r (key, value) ->
       r >>= fun () ->
       match get db read_options key with
-      | `Ok value' -> if String.equal value value' then Ok () else Error (sprintf "Wrong value retrieved: %s expected %s" value' value)
-      | `Not_found -> Error (sprintf "key %s not found" key)
+      | `Ok value' -> if String.equal value value' then Ok () else Error "write_many: bad value"
+      | `Not_found -> Error "write_many"
       | `Error err -> Error err
     end (Ok ()) kvs
   end
@@ -76,4 +94,5 @@ let tests = [
   "write_one", write_one;
   "write_one_err", write_one_err;
   "write_many", write_many;
+  "write_batch_many", write_batch_many;
 ]
