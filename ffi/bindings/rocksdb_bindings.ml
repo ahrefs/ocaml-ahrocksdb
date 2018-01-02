@@ -49,6 +49,21 @@ module M(F: Cstubs.FOREIGN) = struct
     let set_paranoid_checks =
       foreign "rocksdb_options_set_paranoid_checks" C.(options @-> Views.bool_to_uchar @-> returning void)
 
+    let set_max_background_flushes =
+      foreign ("rocksdb_options_set_max_background_flushes") C.(options @-> int @-> returning void)
+
+    let set_disable_auto_compactions =
+      foreign "rocksdb_options_set_disable_auto_compactions" C.(options @-> int @-> returning void)
+
+    let set_level0_file_num_compaction_trigger =
+      foreign "rocksdb_options_set_level0_file_num_compaction_trigger" C.(options @-> Views.int_to_size_t @-> returning void)
+
+    let set_level0_slowdown_writes_trigger =
+      foreign "rocksdb_options_set_level0_slowdown_writes_trigger" C.(options @-> Views.int_to_size_t @-> returning void)
+
+    let set_level0_stop_writes_trigger =
+      foreign "rocksdb_options_set_level0_stop_writes_trigger" C.(options @-> Views.int_to_size_t @-> returning void)
+
   end
 
   module Rocksdb = struct
