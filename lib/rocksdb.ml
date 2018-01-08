@@ -154,6 +154,10 @@ module Batch = struct
     Gc.finalise Batch.destroy t;
     t
 
+  let count = Batch.count
+
+  let clear = Batch.clear
+
   let put batch ~key ~value =
     let key_len = String.length key in
     let value_len = String.length value in

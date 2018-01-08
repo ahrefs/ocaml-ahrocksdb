@@ -114,6 +114,9 @@ module Batch : sig
   (** [create] will create a batch job to be used to batch operation on the database. *)
   val create : unit -> t
 
+  val count : t -> int
+
+  val clear : t -> unit
 
   (** [put batch key value] will take a [batch] job and stage the writing of the [key] key and [value] value in the batch job. *)
   val put : t -> key:string -> value:string -> unit
