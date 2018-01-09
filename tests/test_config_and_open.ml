@@ -12,6 +12,7 @@ let simple_open_default () =
 
 let open_not_random_setters () =
   Utils.with_tmp_dir begin fun name ->
+    let table_format = Options.Block_based (Options.Tables.Block_based.create ~block_size:(64 * 1024 *1024)) in
     let config = {
       Options.compression = `No_compression;
       max_flush_processes = Some 2;
@@ -23,6 +24,7 @@ let open_not_random_setters () =
       memtable_representation = None;
       num_levels = Some 1;
       target_base_file_size = None;
+      table_format = Some table_format;
     }
     in
     let options = Options.options_of_config config in

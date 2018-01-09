@@ -18,6 +18,26 @@ module M(F: Cstubs.FOREIGN) = struct
     type options = unit C.ptr
     let options : options C.typ = C.ptr C.void
 
+    module Tables = struct
+
+      module BlockBased = struct
+
+        type t = unit C.ptr
+        let t : t C.typ = C.ptr C.void
+
+        let create =
+          foreign ("rocksdb_block_based_options_create") C.(void @-> returning t)
+
+        let destroy =
+          foreign ("rocksdb_block_based_options_destroy") C.(t @-> returning void)
+
+        let set_block_size =
+          foreign ("rocksdb_block_based_options_set_block_size") C.(t @-> int_to_size_t @-> returning void)
+
+      end
+
+    end
+
     let create =
       foreign ("rocksdb_options_create") C.(void @-> returning options)
 
@@ -77,6 +97,9 @@ module M(F: Cstubs.FOREIGN) = struct
 
     let set_num_levels =
       foreign "rocksdb_options_set_num_levels" C.(options @-> int @-> returning void)
+
+    let set_block_based_table_factory =
+      foreign "rocksdb_options_set_block_based_table_factory" C.(options @-> Tables.BlockBased.t @-> returning void)
 
   end
 

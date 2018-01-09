@@ -8,6 +8,26 @@ module Options = struct
 
   type options = Options.options
 
+  module Tables = struct
+
+    module Block_based = struct
+
+      module B = Options.Tables.BlockBased
+
+      type t = B.t
+
+      let create ~block_size =
+        let t = B.create () in
+        B.set_block_size t block_size;
+        Gc.finalise B.destroy t;
+        t
+
+    end
+
+  end
+
+  type table_format = Block_based of Tables.Block_based.t
+
   type config = {
     parallelism_level : int option;
     compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ];
@@ -19,6 +39,7 @@ module Options = struct
     memtable_representation : [ `Vector ] option;
     num_levels : int option;
     target_base_file_size : int option;
+    table_format : table_format option;
   }
 
   let apply_config options {
@@ -32,6 +53,7 @@ module Options = struct
       memtable_representation;
       num_levels;
       target_base_file_size;
+      table_format;
     } =
     let open Misc.Opt in
     parallelism_level >>= Options.increase_parallelism options;
@@ -44,6 +66,9 @@ module Options = struct
     match memtable_representation with
     | Some `Vector -> Options.set_memtable_vector_rep options;
     | _ -> ();
+    match table_format with
+    | Some (Block_based config) -> Options.set_block_based_table_factory options config
+    | None -> ();
     Options.set_compression options compression;
     Options.set_disable_auto_compactions options disable_compaction
 
@@ -58,6 +83,7 @@ module Options = struct
     memtable_representation = None;
     num_levels = None;
     target_base_file_size = None;
+    table_format = None;
   }
 
   let options_of_config config =

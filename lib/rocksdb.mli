@@ -21,6 +21,20 @@ module Options : sig
   (** Opaque RocksDB configuration object, should be generated through {options_of_config}. Thread-safe access. *)
   type options
 
+  module Tables : sig
+
+    module Block_based : sig
+
+      type t
+
+      val create : block_size:int -> t
+
+    end
+
+  end
+
+  type table_format = Block_based of Tables.Block_based.t
+
   type config = {
     parallelism_level : int option; (** Number of background processes used by RocksDB *)
     compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data *)
@@ -32,6 +46,7 @@ module Options : sig
     memtable_representation : [ `Vector ] option;
     num_levels : int option;
     target_base_file_size : int option;
+    table_format : table_format option;
   }
 
   (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)
