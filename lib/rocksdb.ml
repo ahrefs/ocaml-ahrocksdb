@@ -16,7 +16,9 @@ module Options = struct
     compaction_trigger : int option;
     slowdown_writes_trigger : int option;
     stop_writes_trigger : int option;
-    memtable_representation : [ `Vector ] option
+    memtable_representation : [ `Vector ] option;
+    num_levels : int option;
+    target_base_file_size : int option;
   }
 
   let apply_config options {
@@ -28,6 +30,8 @@ module Options = struct
       slowdown_writes_trigger;
       stop_writes_trigger;
       memtable_representation;
+      num_levels;
+      target_base_file_size;
     } =
     let open Misc.Opt in
     parallelism_level >>= Options.increase_parallelism options;
@@ -35,6 +39,8 @@ module Options = struct
     compaction_trigger >>= Options.set_level0_file_num_compaction_trigger options;
     slowdown_writes_trigger >>= Options.set_level0_slowdown_writes_trigger options;
     stop_writes_trigger >>= Options.set_level0_stop_writes_trigger options;
+    target_base_file_size >>= Options.set_target_file_size_base options;
+    num_levels >>= Options.set_num_levels options;
     match memtable_representation with
     | Some `Vector -> Options.set_memtable_vector_rep options;
     | _ -> ();
@@ -50,6 +56,8 @@ module Options = struct
     slowdown_writes_trigger = None;
     stop_writes_trigger = None;
     memtable_representation = None;
+    num_levels = None;
+    target_base_file_size = None;
   }
 
   let options_of_config config =

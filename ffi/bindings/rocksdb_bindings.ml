@@ -69,6 +69,15 @@ module M(F: Cstubs.FOREIGN) = struct
     let prepare_for_bulk_load =
       foreign "rocksdb_options_prepare_for_bulk_load" C.(options @-> returning void)
 
+    let set_target_file_size_base =
+      foreign "rocksdb_options_set_target_file_size_base" C.(options @-> int_to_uint64 @-> returning void)
+
+    let set_target_file_size_multiplier =
+      foreign "rocksdb_options_set_target_file_size_multiplier" C.(options @-> int_to_uint64 @-> returning void)
+
+    let set_num_levels =
+      foreign "rocksdb_options_set_num_levels" C.(options @-> int @-> returning void)
+
   end
 
   module Rocksdb = struct

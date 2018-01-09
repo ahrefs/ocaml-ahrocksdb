@@ -29,7 +29,9 @@ module Options : sig
     compaction_trigger : int option; (** Maximum size for a file in level0 to wait for initiating compaction *)
     slowdown_writes_trigger : int option; (** TODO *)
     stop_writes_trigger : int option; (** TODO *)
-    memtable_representation : [ `Vector ] option
+    memtable_representation : [ `Vector ] option;
+    num_levels : int option;
+    target_base_file_size : int option;
   }
 
   (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)

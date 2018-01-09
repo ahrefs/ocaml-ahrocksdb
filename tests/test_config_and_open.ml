@@ -21,6 +21,8 @@ let open_not_random_setters () =
       disable_compaction = false;
       parallelism_level = Some 4;
       memtable_representation = None;
+      num_levels = Some 1;
+      target_base_file_size = None;
     }
     in
     let options = Options.options_of_config config in
