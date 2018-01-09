@@ -13,14 +13,14 @@ let simple_open_default () =
 let open_not_random_setters () =
   Utils.with_tmp_dir begin fun name ->
     let config = {
-      Options.compression = `Snappy;
+      Options.compression = `No_compression;
       max_flush_processes = Some 2;
       compaction_trigger = Some 128;
       slowdown_writes_trigger = Some 128;
       stop_writes_trigger = Some 256;
       disable_compaction = false;
       parallelism_level = Some 4;
-      memtable_representation = Some `Vector;
+      memtable_representation = None;
     }
     in
     let options = Options.options_of_config config in
