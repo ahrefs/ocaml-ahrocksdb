@@ -95,9 +95,6 @@ val open_db : ?create:bool -> options:Options.options -> name:string -> (db, str
     [name] is the path to the database.
 *)
 
-val close_db : db -> unit
-(** [close_db db] will close a database handle *)
-
 val put : db -> Write_options.t -> key:string -> value:string -> (unit, string) result
 (** [put db write_options key value] will write at key [key] the value [value], on database [db].
     Return unit on success, RocksDB reported error on error.

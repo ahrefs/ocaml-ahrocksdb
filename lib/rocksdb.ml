@@ -138,9 +138,11 @@ let with_error_buffer fn =
 
 let open_db ?create:(create=false) ~options ~name =
   Ffi.Options.set_create_if_missing options create;
-  with_error_buffer @@ Rocksdb.open_ options name
-
-let close_db t = Rocksdb.close t
+  match with_error_buffer @@ Rocksdb.open_ options name with
+  | Ok t ->
+    Gc.finalise Rocksdb.close t;
+    Ok t
+  | err -> err
 
 let put db write_options ~key ~value =
   let key_len = String.length key in
