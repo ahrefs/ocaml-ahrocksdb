@@ -1,6 +1,6 @@
 (executables
  ((names (test))
-   (libraries (rocksdb rresult bos cryptokit alcotest))
+   (libraries (rocksdb astring rresult bos cryptokit alcotest))
    ))
 
 (alias

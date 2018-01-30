@@ -76,20 +76,8 @@ let write_one_err () =
     | `Error err -> Error err
   end
 
-let get_random_kvalues n =
-  let rng = Cryptokit.Random.device_rng "/dev/urandom" in
-  if n < 0 then failwith "get_random_kvalues";
-  let rec aux acc = function
-    | 0 -> acc
-    | n ->
-      let key = Cryptokit.Random.string rng 32 in
-      let value = Cryptokit.Random.string rng 32 in
-      aux ((key, value)::acc) (n - 1)
-  in
-  aux [] n
-
 let write_batch_many () =
-  let kvs = get_random_kvalues 10_000 in
+  let kvs = Utils.get_random_kvalues 10_000 in
   Utils.with_tmp_dir begin fun name ->
     let options = Options.options_of_config Options.default in
     open_db ~create:true ~options ~name
@@ -113,7 +101,7 @@ let write_many () =
     open_db ~create:true ~options ~name
     >>= fun db ->
     let write_options = Write_options.create () in
-    let kvs = get_random_kvalues 10_000 in
+    let kvs = Utils.get_random_kvalues 10_000 in
     List.fold_left begin fun r (key, value) ->
       r >>= fun () ->
       put db write_options ~key ~value
@@ -128,25 +116,6 @@ let write_many () =
       | `Error err -> Error err
     end (Ok ()) kvs
   end
-
-let test_iter () =
-  Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
-    >>= fun db ->
-    let write_options = Write_options.create () in
-    let kvs = get_random_kvalues 10_000 in
-    List.fold_left begin fun r (key, value) ->
-      r >>= fun () ->
-      let key = "prefix" ^ key in
-      put db write_options ~key ~value
-    end (Ok ()) kvs
-    >>= fun () ->
-    let read_options = Read_options.create () in
-    let iterator = Iterator.create db read_options in
-    Iterator.seek t "prefix";
-    Iterator.get_key
- end
 
 let tests = [
   "write_one", write_one;

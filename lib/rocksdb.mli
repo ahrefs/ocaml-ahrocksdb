@@ -135,10 +135,19 @@ module Iterator : sig
 
   val create : db -> Read_options.t -> t
 
+  (** [seek iterator prefix] will set the iterator [t] in seek mode, iterating on keys starting by [prefix] *)
   val seek : t -> string -> unit
 
-  val get_key : t -> string option
+  (** [get iterator] will get the current key value pair on iterator [t]. Calling it multiple time in a row with no change of position results in the same pair being returned *)
+  val get : t -> (string * string) option
 
-  val get_value : t -> string option
+  (** [next iterator] will set the iterator to the next key in the range. pair on iterator [t].
+      Be mindful of the fact that you need to check if the iterator is still valid via {!is_valid}, and that according to RocksDB documentation, in prefix mode,
+      you should make sure that the key is indeed starting by your prefix as your ending condition while iterating, since after finishing the range, RocksDB might return the next range after it.
+      See https://github.com/facebook/rocksdb/wiki/Prefix-Seek-API-Changes#transition-to-the-new-usage
+  *)
+  val next : t -> unit
+
+  val is_valid : t -> bool
 
 end

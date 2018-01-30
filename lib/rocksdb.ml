@@ -187,23 +187,39 @@ module Iterator = struct
     let len = String.length key in
     Iterator.seek t (ocaml_string_start key) len
 
+  let next = Iterator.next
+
   let get_key t =
     let result_len = allocate Ffi.V.int_to_size_t 0 in
     let result = Iterator.key t result_len in
     match Ctypes.is_null (to_voidp result) with
-    | true -> None
+    | true -> raise Not_found
     | false ->
        let result_s = string_from_ptr result (!@ result_len) in
        Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result)) result;
-       Some result_s
+       result_s
 
   let get_value t =
     let result_len = allocate Ffi.V.int_to_size_t 0 in
     let result = Iterator.value t result_len in
     match Ctypes.is_null (to_voidp result) with
-    | true -> None
+    | true -> raise Not_found
     | false ->
        let result_s = string_from_ptr result (!@ result_len) in
        Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result)) result;
-       Some result_s
+       result_s
+
+  let is_valid = Iterator.valid
+
+  let get t =
+    if is_valid t then begin
+       try
+         let key = get_key t in
+         let value = get_value t in
+         Some (key, value)
+       with
+       | Not_found -> None
+    end
+    else None
+
 end
