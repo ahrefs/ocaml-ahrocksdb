@@ -171,3 +171,39 @@ module Batch = struct
     write db write_options batch
 
 end
+
+module Iterator = struct
+
+  open Rocksdb
+
+  type t = Iterator.t
+
+  let create db read_options =
+    let t = Iterator.create db read_options in
+    Gc.finalise Iterator.destroy t;
+    t
+
+  let seek t key =
+    let len = String.length key in
+    Iterator.seek t (ocaml_string_start key) len
+
+  let get_key t =
+    let result_len = allocate Ffi.V.int_to_size_t 0 in
+    let result = Iterator.key t result_len in
+    match Ctypes.is_null (to_voidp result) with
+    | true -> None
+    | false ->
+       let result_s = string_from_ptr result (!@ result_len) in
+       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result)) result;
+       Some result_s
+
+  let get_value t =
+    let result_len = allocate Ffi.V.int_to_size_t 0 in
+    let result = Iterator.value t result_len in
+    match Ctypes.is_null (to_voidp result) with
+    | true -> None
+    | false ->
+       let result_s = string_from_ptr result (!@ result_len) in
+       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result)) result;
+       Some result_s
+end

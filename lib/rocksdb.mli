@@ -128,3 +128,17 @@ module Batch : sig
   val simple_write_batch : db -> Write_options.t -> (string * string) list -> (unit, string) result
 
 end
+
+module Iterator : sig
+
+  type t
+
+  val create : db -> Read_options.t -> t
+
+  val seek : t -> string -> unit
+
+  val get_key : t -> string option
+
+  val get_value : t -> string option
+
+end

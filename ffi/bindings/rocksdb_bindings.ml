@@ -157,6 +157,43 @@ module M(F: Cstubs.FOREIGN) = struct
 
     end
 
+    module Iterator = struct
+
+      type t = unit C.ptr
+      let t : t C.typ = C.ptr C.void
+
+      let create =
+        foreign "rocksdb_create_iterator" C.(db @-> Read_options.t @-> returning t)
+
+      let destroy =
+        foreign "rocksdb_iter_destroy" C.(t @-> returning void)
+
+      let valid =
+        foreign "rocksdb_iter_valid" C.(t @-> returning bool_to_uchar)
+
+      let seek_to_first =
+        foreign "rocksdb_iter_seek_to_first" C.(t @-> returning void)
+
+      let seek_to_last =
+        foreign "rocksdb_iter_seek_to_last" C.(t @-> returning void)
+
+      let seek =
+        foreign "rocksdb_iter_seek" C.(t @-> ocaml_string @-> Views.int_to_size_t @-> returning void)
+
+      let next =
+        foreign "rocksdb_iter_next" C.(t @-> returning void)
+
+      let prev =
+        foreign "rocksdb_iter_prev" C.(t @-> returning void)
+
+      let key =
+        foreign "rocksdb_iter_key" C.(t @-> ptr int_to_size_t @-> returning (ptr char))
+
+      let value =
+        foreign "rocksdb_iter_value" C.(t @-> ptr int_to_size_t @-> returning (ptr char))
+
+    end
+
     let put =
       foreign "rocksdb_put"
         C.(db @-> Write_options.t @-> ocaml_string @-> int_to_size_t @-> ocaml_string @-> int_to_size_t @-> ptr string_opt @-> returning void)
