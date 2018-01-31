@@ -21,6 +21,20 @@ module Options : sig
   (** Opaque RocksDB configuration object, should be generated through {options_of_config}. Thread-safe access. *)
   type options
 
+  module Tables : sig
+
+    module Block_based : sig
+
+      type t
+
+      val create : block_size:int -> t
+
+    end
+
+  end
+
+  type table_format = Block_based of Tables.Block_based.t
+
   type config = {
     parallelism_level : int option; (** Number of background processes used by RocksDB *)
     compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data *)
@@ -29,7 +43,10 @@ module Options : sig
     compaction_trigger : int option; (** Maximum size for a file in level0 to wait for initiating compaction *)
     slowdown_writes_trigger : int option; (** TODO *)
     stop_writes_trigger : int option; (** TODO *)
-    memtable_representation : [ `Vector ] option
+    memtable_representation : [ `Vector ] option;
+    num_levels : int option;
+    target_base_file_size : int option;
+    table_format : table_format option;
   }
 
   (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)
@@ -77,9 +94,6 @@ val open_db : ?create:bool -> options:Options.options -> name:string -> (db, str
     [options] is {!Options.options} and must be created through {!Options.options_of_config}.
     [name] is the path to the database.
 *)
-
-val close_db : db -> unit
-(** [close_db db] will close a database handle *)
 
 val put : db -> Write_options.t -> key:string -> value:string -> (unit, string) result
 (** [put db write_options key value] will write at key [key] the value [value], on database [db].
