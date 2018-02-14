@@ -139,11 +139,14 @@ val flush : db -> Flush_options.t -> (unit, string) result
     Return unit on success, RocksDB reported error on error.
 *)
 
-val compact_now : db -> unit
+val compact_now : db -> (unit, string) result
 (** [compact_now db] will initiate a compaction on all ranges available in database. This is an asynchronous operation, returning unit once operation is started. *)
 
-val stats : db -> string option
+val stats : db -> (string option, string) result
 (** [stats db] will return the accumulated stats for this database handle as an optional string form *)
+
+val close_db : db -> (unit, string) result
+(** [close db] explicitly closes the db handle. Any further access will raise an error *)
 
 (** Batch processing
     RocksDB allows to batch operations through a dedicated batch object that must be fed to {!write}.
@@ -176,7 +179,7 @@ module Iterator : sig
 
   type t
 
-  val create : db -> Read_options.t -> t
+  val create : db -> Read_options.t -> (t, string) result
 
   (** [seek iterator prefix] will set the iterator [t] in seek mode, iterating on keys starting by [prefix] *)
   val seek : t -> string -> unit

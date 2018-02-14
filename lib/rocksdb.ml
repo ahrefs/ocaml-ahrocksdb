@@ -154,7 +154,30 @@ module Read_options = struct
 
 end
 
-type db = Rocksdb.db
+type db = {
+  mutable closed: bool;
+  db: Rocksdb.db;
+}
+
+let close = function
+  | { closed = true; _ } -> ()
+  | db ->
+    db.closed <- true;
+    Rocksdb.close db.db
+
+let close_db = function
+  | { closed = true; _ } -> Error "trying to close a database handle already closed"
+  | db ->
+    db.closed <- true;
+    Rocksdb.close db.db;
+    Ok ()
+
+let wrap_db db = { db; closed = false }
+
+let unwrap_db db f =
+  match db with
+  | { closed = true; _ } -> Error "trying to access closed database handle"
+  | { db; _ } -> f db
 
 let with_error_buffer fn =
   let errb = allocate string_opt None in
@@ -167,32 +190,38 @@ let open_db ?create:(create=false) ~options ~name =
   Ffi.Options.set_create_if_missing options create;
   match with_error_buffer @@ Rocksdb.open_ options name with
   | Ok t ->
-    Gc.finalise Rocksdb.close t;
+    let t = wrap_db t in
+    Gc.finalise close t;
     Ok t
-  | err -> err
+  | Error err -> Error err
 
 let open_db_read_only ?fail_on_wal:(fail=false) ~options ~name =
   match with_error_buffer @@ Rocksdb.open_read_only options name fail with
   | Ok t ->
-    Gc.finalise Rocksdb.close t;
+    let t = wrap_db t in
+    Gc.finalise close t;
     Ok t
-  | err -> err
+  | Error err -> Error err
 
 let put db write_options ~key ~value =
   let key_len = String.length key in
   let value_len = String.length value in
+  unwrap_db db @@ fun db ->
   Rocksdb.put db write_options (ocaml_string_start key) key_len (ocaml_string_start value) value_len
   |> with_error_buffer
 
 let delete db write_options key =
   let key_len = String.length key in
+  unwrap_db db @@ fun db ->
   Rocksdb.delete db write_options (ocaml_string_start key) key_len
   |> with_error_buffer
 
 let get db read_options key =
   let key_len = String.length key in
   let result_len = allocate Ffi.V.int_to_size_t 0 in
-  let result = with_error_buffer @@ Rocksdb.get db read_options (ocaml_string_start key) key_len result_len in
+  let result = unwrap_db db @@ fun db ->
+    with_error_buffer @@ Rocksdb.get db read_options (ocaml_string_start key) key_len result_len
+  in
   match result with
   | Error err -> `Error err
   | Ok result_ptr ->
@@ -204,18 +233,22 @@ let get db read_options key =
       `Ok result
 
 let flush db flush_options =
+  unwrap_db db @@ fun db ->
   Rocksdb.flush db flush_options
   |> with_error_buffer
 
-let compact_now db = Rocksdb.compact_range db None 0 None 0
+let compact_now db =
+  unwrap_db db @@ fun db ->
+  Ok (Rocksdb.compact_range db None 0 None 0)
 
 let stats db =
+  unwrap_db db @@ fun db ->
   match Rocksdb.property_value db "rocksdb.stats" with
-  | None -> None
+  | None -> Ok None
   | Some stats ->
     let string = coerce (ptr char) string stats in
     Gc.finalise (fun stats -> Rocksdb.free (to_voidp stats)) stats;
-    Some string
+    Ok (Some string)
 
 module Batch = struct
 
@@ -237,7 +270,9 @@ module Batch = struct
     let value_len = String.length value in
     Batch.put batch (ocaml_string_start key) key_len (ocaml_string_start value) value_len
 
-  let write db write_options batch = Rocksdb.write db write_options batch |> with_error_buffer
+  let write db write_options batch =
+    unwrap_db db @@ fun db ->
+    Rocksdb.write db write_options batch |> with_error_buffer
 
   let simple_write_batch db write_options elts =
     let batch = create () in
@@ -253,9 +288,10 @@ module Iterator = struct
   type t = Iterator.t
 
   let create db read_options =
+    unwrap_db db @@ fun db ->
     let t = Iterator.create db read_options in
     Gc.finalise Iterator.destroy t;
-    t
+    Ok t
 
   let seek t key =
     let len = String.length key in
