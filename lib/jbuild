@@ -1,5 +1,5 @@
 (library
- ((name rocksdb_lib)
+ ((name rocksdb)
    (public_name rocksdb)
    (libraries (rocksdb.ffi astring))))
 

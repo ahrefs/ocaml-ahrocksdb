@@ -1,5 +1,5 @@
 open Rresult.R.Infix
-open Rocksdb_lib.Rocksdb
+open Rocksdb
 open Bos
 open Printf
 
