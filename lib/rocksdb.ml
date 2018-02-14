@@ -38,6 +38,9 @@ module Options = struct
     stop_writes_trigger : int option;
     memtable_representation : [ `Vector ] option;
     num_levels : int option;
+    write_buffer_size : int option;
+    max_write_buffer_number : int option;
+    min_write_buffer_number_to_merge : int option;
     target_base_file_size : int option;
     table_format : table_format option;
   }
@@ -54,6 +57,9 @@ module Options = struct
       num_levels;
       target_base_file_size;
       table_format;
+      write_buffer_size;
+      max_write_buffer_number;
+      min_write_buffer_number_to_merge;
     } =
     let open Misc.Opt in
     parallelism_level >>= Options.increase_parallelism options;
@@ -63,6 +69,9 @@ module Options = struct
     stop_writes_trigger >>= Options.set_level0_stop_writes_trigger options;
     target_base_file_size >>= Options.set_target_file_size_base options;
     num_levels >>= Options.set_num_levels options;
+    write_buffer_size >>= Options.set_write_buffer_size options;
+    max_write_buffer_number >>= Options.set_max_write_buffer_number options;
+    min_write_buffer_number_to_merge >>= Options.set_min_write_buffer_number_to_merge options;
     match memtable_representation with
     | Some `Vector -> Options.set_memtable_vector_rep options;
     | _ -> ();
@@ -84,6 +93,9 @@ module Options = struct
     num_levels = None;
     target_base_file_size = None;
     table_format = None;
+    write_buffer_size = None;
+    max_write_buffer_number = None;
+    min_write_buffer_number_to_merge = None;
   }
 
   let options_of_config config =

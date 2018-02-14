@@ -13,6 +13,7 @@ let open_not_random_setters () =
   Utils.with_tmp_dir begin fun name ->
     let table_format = Options.Block_based (Options.Tables.Block_based.create ~block_size:(64 * 1024 *1024)) in
     let config = {
+      Options.default with
       Options.compression = `No_compression;
       max_flush_processes = Some 2;
       compaction_trigger = Some 128;

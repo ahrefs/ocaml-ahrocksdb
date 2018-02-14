@@ -45,6 +45,9 @@ module Options : sig
     stop_writes_trigger : int option; (** TODO *)
     memtable_representation : [ `Vector ] option;
     num_levels : int option;
+    write_buffer_size : int option;
+    max_write_buffer_number : int option;
+    min_write_buffer_number_to_merge : int option;
     target_base_file_size : int option;
     table_format : table_format option;
   }
