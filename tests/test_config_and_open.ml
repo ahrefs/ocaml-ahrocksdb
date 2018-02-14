@@ -1,5 +1,5 @@
 open Rresult.R.Infix
-open Rocksdb
+open Rocksdb_lib.Rocksdb
 
 let simple_open_default () =
   Utils.with_tmp_dir begin fun name ->
