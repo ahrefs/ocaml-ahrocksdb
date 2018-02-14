@@ -83,15 +83,6 @@ module M(F: Cstubs.FOREIGN) = struct
     let set_level0_stop_writes_trigger =
       foreign "rocksdb_options_set_level0_stop_writes_trigger" C.(options @-> int_to_size_t @-> returning void)
 
-    let set_write_buffer_size =
-      foreign "rocksdb_options_set_write_buffer_size" C.(options @-> int_to_size_t @-> returning void)
-
-    let set_max_write_buffer_number =
-      foreign "rocksdb_options_set_max_write_buffer_number" C.(options @-> int @-> returning void)
-
-    let set_max_write_buffer_number_to_merge =
-      foreign "rocksdb_options_set_max_write_buffer_number_to_merge" C.(options @-> int @-> returning void)
-
     let set_memtable_vector_rep =
       foreign "rocksdb_options_set_memtable_vector_rep" C.(options @-> returning void)
 
