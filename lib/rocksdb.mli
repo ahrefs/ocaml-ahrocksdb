@@ -65,7 +65,7 @@ module Write_options : sig
 
   type t
 
-  val create : ?disable_wal:int -> ?sync:bool -> unit -> t
+  val create : ?disable_wal:bool -> ?sync:bool -> unit -> t
   (** [create disable_wal sync] returns a new WriteOptions object to be used to
       configure write operations on a RocksDB database.
       TODO

@@ -149,7 +149,7 @@ module M(F: Cstubs.FOREIGN) = struct
       (*   foreign "rocksdb_writeoptions_set_low_pri" C.(t @-> Views.bool_to_uchar @-> returning void) *)
 
       let disable_WAL =
-        foreign "rocksdb_writeoptions_disable_WAL" C.(t @-> int @-> returning void)
+        foreign "rocksdb_writeoptions_disable_WAL" C.(t @-> Views.bool_to_int @-> returning void)
 
     end
 
