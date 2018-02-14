@@ -171,6 +171,13 @@ let open_db ?create:(create=false) ~options ~name =
     Ok t
   | err -> err
 
+let open_db_read_only ?fail_on_wal:(fail=false) ~options ~name =
+  match with_error_buffer @@ Rocksdb.open_read_only options name fail with
+  | Ok t ->
+    Gc.finalise Rocksdb.close t;
+    Ok t
+  | err -> err
+
 let put db write_options ~key ~value =
   let key_len = String.length key in
   let value_len = String.length value in

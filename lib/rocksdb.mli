@@ -111,6 +111,14 @@ val open_db : ?create:bool -> options:Options.options -> name:string -> (db, str
     [name] is the path to the database.
 *)
 
+val open_db_read_only : ?fail_on_wal:bool -> options:Options.options -> name:string -> (db, string) result
+(** [open_db options name] will return a read-only handle to the database in case
+    of success or the error returned by RocksDB in case of failure.
+    [options] is {!Options.options} and must be created through {!Options.options_of_config}.
+    [name] is the path to the database.
+    [fail_on_wal] returns an error if write log is not empty
+*)
+
 val put : db -> Write_options.t -> key:string -> value:string -> (unit, string) result
 (** [put db write_options key value] will write at key [key] the value [value], on database [db].
     Return unit on success, RocksDB reported error on error.
