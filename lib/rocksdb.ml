@@ -122,6 +122,21 @@ module Write_options = struct
 
 end
 
+module Flush_options = struct
+
+  open Rocksdb
+
+  type t = Flush_options.t
+
+  let create ?wait () =
+    let open Misc.Opt in
+    let t = Flush_options.create () in
+    wait >>= Flush_options.wait t;
+    Gc.finalise Flush_options.destroy t;
+    t
+
+end
+
 module Read_options = struct
 
   open Rocksdb
@@ -180,6 +195,10 @@ let get db read_options key =
       let result = string_from_ptr result_ptr (!@ result_len) in
       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result_ptr)) result_ptr;
       `Ok result
+
+let flush db flush_options =
+  Rocksdb.flush db flush_options
+  |> with_error_buffer
 
 let compact_now db = Rocksdb.compact_range db None 0 None 0
 

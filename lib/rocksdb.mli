@@ -73,6 +73,19 @@ module Write_options : sig
 
 end
 
+(** Flush options *)
+module Flush_options : sig
+
+  type t
+
+  val create : ?wait:bool -> unit -> t
+  (** [create wait] returns a new FlushOptions object to be used to
+      configure Flush operations on a RocksDB database.
+      TODO
+  *)
+
+end
+
 (** Read options *)
 module Read_options : sig
 
@@ -111,6 +124,11 @@ val delete : db -> Write_options.t -> string -> (unit, string) result
 val get : db -> Read_options.t -> string -> [ `Error of string | `Not_found | `Ok of string ]
 (** [get db read_options key] will fetch key [key] on database [db].
     Returns `Ok value if the key is found, `Not_found otherwise, and `Error if a failure occurred.
+*)
+
+val flush : db -> Flush_options.t -> (unit, string) result
+(** [flush db flush_options] will flush all pending memtables on database [db].
+    Return unit on success, RocksDB reported error on error.
 *)
 
 val compact_now : db -> unit

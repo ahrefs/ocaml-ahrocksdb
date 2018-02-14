@@ -153,6 +153,22 @@ module M(F: Cstubs.FOREIGN) = struct
 
     end
 
+    module Flush_options = struct
+
+      type t = unit C.ptr
+      let t : t C.typ = C.ptr C.void
+
+      let create =
+        foreign "rocksdb_flushoptions_create" C.(void @-> returning t)
+
+      let destroy =
+        foreign "rocksdb_flushoptions_destroy" C.(t @-> returning void)
+
+      let wait =
+        foreign "rocksdb_flushoptions_set_wait" C.(t @-> Views.bool_to_int @-> returning void)
+    end
+
+
     module Read_options = struct
 
       type t = unit C.ptr
@@ -250,6 +266,10 @@ module M(F: Cstubs.FOREIGN) = struct
     let write =
       foreign "rocksdb_write"
         C.(db @-> Write_options.t @-> Batch.t @-> ptr string_opt @-> returning void)
+
+    let flush =
+      foreign "rocksdb_flush"
+        C.(db @-> Flush_options.t @-> ptr string_opt @-> returning void)
 
     let compact_range =
       foreign "rocksdb_compact_range"
