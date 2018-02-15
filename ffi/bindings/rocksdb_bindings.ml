@@ -56,6 +56,9 @@ module M(F: Cstubs.FOREIGN) = struct
     let optimize_universal_style_compaction =
       foreign ("rocksdb_options_optimize_universal_style_compaction") C.(options @-> int_to_uint64 @-> returning void)
 
+    let set_optimize_filters_for_hits =
+      foreign ("rocksdb_options_set_optimize_filters_for_hits") C.(options @-> bool_to_int @-> returning void)
+
     let set_compression =
       foreign "rocksdb_options_set_compression" C.(options @-> compression_view @-> returning void)
 

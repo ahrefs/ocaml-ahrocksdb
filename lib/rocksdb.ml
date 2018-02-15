@@ -31,6 +31,7 @@ module Options = struct
   type config = {
     parallelism_level : int option;
     compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ];
+    optimize_filters_for_hits: bool option;
     disable_compaction : bool;
     max_flush_processes : int option;
     compaction_trigger : int option;
@@ -48,6 +49,7 @@ module Options = struct
   let apply_config options {
       parallelism_level;
       compression;
+      optimize_filters_for_hits;
       disable_compaction;
       max_flush_processes;
       compaction_trigger;
@@ -63,6 +65,7 @@ module Options = struct
     } =
     let open Misc.Opt in
     parallelism_level >>= Options.increase_parallelism options;
+    optimize_filters_for_hits >>= Options.set_optimize_filters_for_hits options;
     max_flush_processes >>= Options.set_max_background_flushes options;
     compaction_trigger >>= Options.set_level0_file_num_compaction_trigger options;
     slowdown_writes_trigger >>= Options.set_level0_slowdown_writes_trigger options;
@@ -84,6 +87,7 @@ module Options = struct
   let default = {
     parallelism_level = None;
     compression = `No_compression;
+    optimize_filters_for_hits = None;
     disable_compaction = false;
     max_flush_processes = None;
     compaction_trigger = None;

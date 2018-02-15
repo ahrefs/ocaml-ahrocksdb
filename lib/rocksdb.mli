@@ -38,6 +38,7 @@ module Options : sig
   type config = {
     parallelism_level : int option; (** Number of background processes used by RocksDB *)
     compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data *)
+    optimize_filters_for_hits: bool option;
     disable_compaction : bool; (** Disable compaction: data will not be compressed, but manual compaction can still be issued *)
     max_flush_processes : int option; (** Number of background workers dedicated to flush *)
     compaction_trigger : int option; (** Maximum size for a file in level0 to wait for initiating compaction *)
