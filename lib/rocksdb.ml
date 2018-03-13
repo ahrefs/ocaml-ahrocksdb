@@ -310,7 +310,6 @@ module Iterator = struct
     | true -> raise Not_found
     | false ->
        let result_s = string_from_ptr result (!@ result_len) in
-       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result)) result;
        result_s
 
   let get_value t =
@@ -320,7 +319,6 @@ module Iterator = struct
     | true -> raise Not_found
     | false ->
        let result_s = string_from_ptr result (!@ result_len) in
-       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result)) result;
        result_s
 
   let is_valid = Iterator.valid
