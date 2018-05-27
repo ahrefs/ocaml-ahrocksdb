@@ -51,6 +51,7 @@ module Options : sig
     min_write_buffer_number_to_merge : int option;
     target_base_file_size : int option;
     table_format : table_format option;
+    max_open_files : int option;
   }
 
   (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)

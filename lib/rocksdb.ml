@@ -44,6 +44,7 @@ module Options = struct
     min_write_buffer_number_to_merge : int option;
     target_base_file_size : int option;
     table_format : table_format option;
+    max_open_files : int option;
   }
 
   let apply_config options {
@@ -61,6 +62,7 @@ module Options = struct
       table_format;
       write_buffer_size;
       max_write_buffer_number;
+      max_open_files;
       min_write_buffer_number_to_merge;
     } =
     let open Misc.Opt in
@@ -75,6 +77,7 @@ module Options = struct
     write_buffer_size >>= Options.set_write_buffer_size options;
     max_write_buffer_number >>= Options.set_max_write_buffer_number options;
     min_write_buffer_number_to_merge >>= Options.set_min_write_buffer_number_to_merge options;
+    max_open_files >>= Options.set_max_open_files options;
     match memtable_representation with
     | Some `Vector -> Options.set_memtable_vector_rep options;
     | _ -> ();
@@ -100,6 +103,7 @@ module Options = struct
     write_buffer_size = None;
     max_write_buffer_number = None;
     min_write_buffer_number_to_merge = None;
+    max_open_files = None;
   }
 
   let options_of_config config =

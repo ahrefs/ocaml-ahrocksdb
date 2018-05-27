@@ -113,6 +113,9 @@ module M(F: Cstubs.FOREIGN) = struct
     let set_block_based_table_factory =
       foreign "rocksdb_options_set_block_based_table_factory" C.(options @-> Tables.BlockBased.t @-> returning void)
 
+    let set_max_open_files =
+      foreign "rocksdb_options_set_max_open_files" C.(options @-> int @-> returning void)
+
   end
 
   module Rocksdb = struct
