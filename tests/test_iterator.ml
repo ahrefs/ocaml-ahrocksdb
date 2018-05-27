@@ -18,7 +18,7 @@ let simple_iterator_test () =
     end (Ok ()) kvs
     >>= fun () ->
     let read_options = Read_options.create () in
-    let it = Iterator.create db read_options in
+    Iterator.create db read_options >>= fun it ->
     Iterator.seek it "prefix";
     let rec walk acc =
       match Iterator.get it with
@@ -45,7 +45,7 @@ let simple_iterator_test_two_prefixes () =
     end (Ok ()) kvs
     >>= fun () ->
     let read_options = Read_options.create () in
-    let it = Iterator.create db read_options in
+    Iterator.create db read_options >>= fun it ->
     Iterator.seek it "prefix";
     let rec walk acc =
       match Iterator.get it with

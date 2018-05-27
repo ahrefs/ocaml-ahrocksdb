@@ -25,6 +25,7 @@ let open_not_random_setters () =
       num_levels = Some 1;
       target_base_file_size = None;
       table_format = Some table_format;
+      max_open_files = Some (-1);
     }
     in
     let options = Options.options_of_config config in
