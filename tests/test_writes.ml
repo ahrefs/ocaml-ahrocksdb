@@ -30,7 +30,7 @@ let write_one_ttl () =
     let value = "llama" in
     put db write_options ~key ~value
     >>= fun () ->
-    Unix.sleep 1;
+    Unix.sleep 3;
     Rocksdb.compact_now db >>= fun () ->
     let read_options = Read_options.create () in
     match get db read_options key with
@@ -137,7 +137,7 @@ let write_many () =
 
 let tests = [
   "write_one", write_one;
-  "write_one_ttl", write_one;
+  "write_one_ttl", write_one_ttl;
   "write_one_err", write_one_err;
   "write_many", write_many;
   "write_batch_many", write_batch_many;
