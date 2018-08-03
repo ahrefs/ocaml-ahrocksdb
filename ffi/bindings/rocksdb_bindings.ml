@@ -129,6 +129,9 @@ module M(F: Cstubs.FOREIGN) = struct
     let open_read_only =
       foreign "rocksdb_open_for_read_only" C.(Options.options @-> string @-> bool_to_uchar @-> ptr string_opt @-> returning db)
 
+    let open_with_ttl =
+      foreign "rocksdb_open_with_ttl" C.(Options.options @-> string @-> int @-> ptr string_opt @-> returning db)
+
     let close =
       foreign "rocksdb_close" C.(db @-> returning void)
 

@@ -211,6 +211,16 @@ let open_db_read_only ?fail_on_wal:(fail=false) ~options ~name =
     Ok t
   | Error err -> Error err
 
+let open_db_with_ttl ?create:(create=false) ~options ~name ~ttl =
+  Ffi.Options.set_create_if_missing options create;
+  match with_error_buffer @@ Rocksdb.open_with_ttl options name ttl with
+  | Ok t ->
+    let t = wrap_db t in
+    Gc.finalise close t;
+    Ok t
+  | Error err -> Error err
+
+
 let put db write_options ~key ~value =
   let key_len = String.length key in
   let value_len = String.length value in

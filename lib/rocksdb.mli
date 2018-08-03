@@ -121,6 +121,14 @@ val open_db_read_only : ?fail_on_wal:bool -> options:Options.options -> name:str
     [fail_on_wal] returns an error if write log is not empty
 *)
 
+val open_db_with_ttl : ?create:bool -> options:Options.options -> name:string -> ttl:int -> (db, string) result
+(** [open_db_with_ttl options name ttl] will return an handle to the database in case
+    of success or the error returned by RocksDB in case of failure.
+    [options] is {!Options.options} and must be created through {!Options.options_of_config}.
+    [name] is the path to the database.
+    [ttl] Time in seconds after which a key should be removed (best-effort basis, during compaction)
+*)
+
 val put : db -> Write_options.t -> key:string -> value:string -> (unit, string) result
 (** [put db write_options key value] will write at key [key] the value [value], on database [db].
     Return unit on success, RocksDB reported error on error.

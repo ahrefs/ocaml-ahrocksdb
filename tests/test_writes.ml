@@ -20,6 +20,24 @@ let write_one () =
     | `Error err -> Error err
   end
 
+let write_one_ttl () =
+  Utils.with_tmp_dir begin fun name ->
+    let options = Options.options_of_config Options.default in
+    open_db_with_ttl ~create:true ~options ~name ~ttl:1
+    >>= fun db ->
+    let write_options = Write_options.create () in
+    let key = "cyber" in
+    let value = "llama" in
+    put db write_options ~key ~value
+    >>= fun () ->
+    Unix.sleep 1;
+    Rocksdb.compact_now db >>= fun () ->
+    let read_options = Read_options.create () in
+    match get db read_options key with
+    | `Ok value' -> Error ("Key was not removed by compaction in TTL mode")
+    | `Not_found -> Ok ()
+    | `Error err -> Error err
+  end
 let update_one () =
   Utils.with_tmp_dir begin fun name ->
     let options = Options.options_of_config Options.default in
@@ -119,6 +137,7 @@ let write_many () =
 
 let tests = [
   "write_one", write_one;
+  "write_one_ttl", write_one;
   "write_one_err", write_one_err;
   "write_many", write_many;
   "write_batch_many", write_batch_many;
