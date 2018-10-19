@@ -18,6 +18,22 @@ module M(F: Cstubs.FOREIGN) = struct
     type options = unit C.ptr
     let options : options C.typ = C.ptr C.void
 
+    module FilterPolicy = struct
+
+      type t = unit C.ptr
+      let t : t C.typ = C.ptr C.void
+
+      let create_bloom_full =
+        foreign ("rocksdb_filterpolicy_create_bloom_full") C.(int @-> returning t)
+
+      let create_bloom =
+        foreign ("rocksdb_filterpolicy_create_bloom") C.(int @-> returning t)
+
+      let destroy =
+        foreign ("rocksdb_filterpolicy_destroy") C.(t @-> returning void)
+
+    end
+
     module Tables = struct
 
       module BlockBased = struct
@@ -33,6 +49,9 @@ module M(F: Cstubs.FOREIGN) = struct
 
         let set_block_size =
           foreign ("rocksdb_block_based_options_set_block_size") C.(t @-> int_to_size_t @-> returning void)
+
+        let set_filter_policy =
+          foreign ("rocksdb_block_based_options_set_filter_policy") C.(t @-> FilterPolicy.t @-> returning void)
 
       end
 

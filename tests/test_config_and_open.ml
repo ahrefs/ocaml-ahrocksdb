@@ -11,7 +11,9 @@ let simple_open_default () =
 
 let open_not_random_setters () =
   Utils.with_tmp_dir begin fun name ->
-    let table_format = Options.Block_based (Options.Tables.Block_based.create ~block_size:(64 * 1024 *1024)) in
+    let filter_policy = Options.Filter_policy.create_bloom_full ~bits_per_key:12 in
+    let block_based_table = Options.Tables.Block_based.create ~block_size:(64 * 1024 *1024) in
+    Options.Tables.Block_based.set_filter_policy block_based_table filter_policy;
     let config = {
       Options.default with
       Options.compression = `No_compression;
@@ -24,7 +26,7 @@ let open_not_random_setters () =
       memtable_representation = None;
       num_levels = Some 1;
       target_base_file_size = None;
-      table_format = Some table_format;
+      table_format = Some (Block_based block_based_table);
       max_open_files = Some (-1);
     }
     in

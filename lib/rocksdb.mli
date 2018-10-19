@@ -21,6 +21,15 @@ module Options : sig
   (** Opaque RocksDB configuration object, should be generated through {options_of_config}. Thread-safe access. *)
   type options
 
+  module Filter_policy : sig
+
+    type t
+
+    val create_bloom : bits_per_key:int -> t
+    val create_bloom_full : bits_per_key:int -> t
+
+  end
+
   module Tables : sig
 
     module Block_based : sig
@@ -28,6 +37,8 @@ module Options : sig
       type t
 
       val create : block_size:int -> t
+
+      val set_filter_policy : t -> Filter_policy.t -> unit
 
     end
 

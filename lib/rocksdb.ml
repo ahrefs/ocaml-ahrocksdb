@@ -8,6 +8,24 @@ module Options = struct
 
   type options = Options.options
 
+  module Filter_policy = struct
+
+    module B = Options.FilterPolicy
+
+    type t = B.t
+
+    let create_bloom ~bits_per_key =
+      let t = B.create_bloom bits_per_key in
+      Gc.finalise B.destroy t;
+      t
+
+    let create_bloom_full ~bits_per_key =
+      let t = B.create_bloom_full bits_per_key in
+      Gc.finalise B.destroy t;
+      t
+
+  end
+
   module Tables = struct
 
     module Block_based = struct
@@ -21,6 +39,8 @@ module Options = struct
         B.set_block_size t block_size;
         Gc.finalise B.destroy t;
         t
+
+      let set_filter_policy t filter_policy = B.set_filter_policy t filter_policy
 
     end
 
