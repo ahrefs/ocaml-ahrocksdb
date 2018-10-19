@@ -14,15 +14,9 @@ module Options = struct
 
     type t = B.t
 
-    let create_bloom ~bits_per_key =
-      let t = B.create_bloom bits_per_key in
-      Gc.finalise B.destroy t;
-      t
+    let create_bloom ~bits_per_key = B.create_bloom bits_per_key
 
-    let create_bloom_full ~bits_per_key =
-      let t = B.create_bloom_full bits_per_key in
-      Gc.finalise B.destroy t;
-      t
+    let create_bloom_full ~bits_per_key = B.create_bloom_full bits_per_key
 
   end
 
