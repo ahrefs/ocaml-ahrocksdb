@@ -1,7 +1,5 @@
 open Rocksdb
 open Rresult.R.Infix
-open Rocksdb
-open Bos
 open Printf
 
 let simple_iterator_test () =
@@ -22,7 +20,7 @@ let simple_iterator_test () =
     Iterator.seek it "prefix";
     let rec walk acc =
       match Iterator.get it with
-      | Some (key, value) when Astring.String.is_prefix ~affix:"prefix" key -> Iterator.next it; walk (acc + 1)
+      | Some (key, _) when Astring.String.is_prefix ~affix:"prefix" key -> Iterator.next it; walk (acc + 1)
       | _ -> acc
     in
     let res = walk 0 in
@@ -49,7 +47,7 @@ let simple_iterator_test_two_prefixes () =
     Iterator.seek it "prefix";
     let rec walk acc =
       match Iterator.get it with
-      | Some (key, value) when Astring.String.is_prefix ~affix:"prefix" key -> Iterator.next it; walk (acc + 1)
+      | Some (key, _) when Astring.String.is_prefix ~affix:"prefix" key -> Iterator.next it; walk (acc + 1)
       | _ -> acc
     in
     let res = walk 0 in

@@ -40,7 +40,7 @@ let open_error () =
     let options = Options.options_of_config Options.default in
     match open_db ~create:false ~options ~name with
     | Error _ -> Ok ()
-    | Ok db ->
+    | Ok _ ->
       Error "Test_config_and_open.open error failed: open was successful"
   end
 

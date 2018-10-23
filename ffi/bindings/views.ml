@@ -8,7 +8,6 @@ let bool_to_uchar =
     uchar
 
 let bool_to_int =
-  let open Unsigned in
   view
     ~read:(fun u -> u <> 0)
     ~write:(function true -> 1 | false -> 0)

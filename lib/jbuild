@@ -1,6 +1,0 @@
-(library
- ((name rocksdb)
-   (public_name rocksdb)
-   (libraries (rocksdb.ffi astring))))
-
-(jbuild_version 1)

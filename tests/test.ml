@@ -1,5 +1,3 @@
-open Rresult.R.Infix
-
 type error = string
 let pp_error ppf x = Fmt.string ppf x
 let error = Alcotest.testable pp_error (=)

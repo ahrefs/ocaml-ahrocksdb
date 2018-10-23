@@ -262,7 +262,7 @@ let get db read_options key =
     match Ctypes.is_null (to_voidp result_ptr) with
     | true -> `Not_found
     | false ->
-      let result = string_from_ptr result_ptr (!@ result_len) in
+      let result = string_from_ptr result_ptr ~length:(!@ result_len) in
       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result_ptr)) result_ptr;
       `Ok result
 
@@ -310,7 +310,7 @@ module Batch = struct
 
   let simple_write_batch db write_options elts =
     let batch = create () in
-    List.iter (fun (key, value) -> put batch key value) elts;
+    List.iter (fun (key, value) -> put batch ~key ~value) elts;
     write db write_options batch
 
 end
@@ -339,7 +339,7 @@ module Iterator = struct
     match Ctypes.is_null (to_voidp result) with
     | true -> raise Not_found
     | false ->
-       let result_s = string_from_ptr result (!@ result_len) in
+       let result_s = string_from_ptr result ~length:(!@ result_len) in
        result_s
 
   let get_value t =
@@ -348,7 +348,7 @@ module Iterator = struct
     match Ctypes.is_null (to_voidp result) with
     | true -> raise Not_found
     | false ->
-       let result_s = string_from_ptr result (!@ result_len) in
+       let result_s = string_from_ptr result ~length:(!@ result_len) in
        result_s
 
   let is_valid = Iterator.valid

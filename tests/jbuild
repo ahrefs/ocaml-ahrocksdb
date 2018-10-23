@@ -1,9 +1,0 @@
-(executables
- ((names (test))
-   (libraries (rocksdb astring rresult bos cryptokit alcotest))
-   ))
-
-(alias
-((name    runtest)
-  (deps    (test.exe))
-  (action (run ${<}))))

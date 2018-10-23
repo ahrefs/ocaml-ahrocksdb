@@ -1,6 +1,5 @@
 open Rresult.R.Infix
 open Rocksdb
-open Bos
 open Printf
 
 let write_one () =
@@ -34,7 +33,7 @@ let write_one_ttl () =
     Rocksdb.compact_now db >>= fun () ->
     let read_options = Read_options.create () in
     match get db read_options key with
-    | `Ok value' -> Error ("Key was not removed by compaction in TTL mode")
+    | `Ok _ -> Error ("Key was not removed by compaction in TTL mode")
     | `Not_found -> Ok ()
     | `Error err -> Error err
   end

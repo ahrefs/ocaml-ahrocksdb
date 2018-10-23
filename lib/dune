@@ -1,0 +1,5 @@
+(library
+ (name rocksdb)
+ (public_name rocksdb)
+ (libraries rocksdb.ffi astring)
+)
