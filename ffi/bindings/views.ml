@@ -41,3 +41,7 @@ let int_to_uint64 =
 let int_to_size_t =
   let open Unsigned in
   view ~write:Size_t.of_int ~read:Size_t.to_int Ctypes.size_t
+
+let size_t_to_int =
+  let open Unsigned in
+  view ~write:Size_t.to_int ~read:Size_t.of_int Ctypes.int

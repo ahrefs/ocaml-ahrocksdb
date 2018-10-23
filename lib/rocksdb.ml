@@ -36,6 +36,8 @@ module Options = struct
 
       let set_filter_policy t filter_policy = B.set_filter_policy t filter_policy
 
+      let set_cache_index_and_filter_blocks t b = B.set_cache_index_and_filter_blocks t b
+
     end
 
   end

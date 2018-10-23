@@ -40,6 +40,8 @@ module Options : sig
 
       val set_filter_policy : t -> Filter_policy.t -> unit
 
+      val set_cache_index_and_filter_blocks : t -> bool -> unit
+
     end
 
   end

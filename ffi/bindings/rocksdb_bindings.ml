@@ -53,7 +53,33 @@ module M(F: Cstubs.FOREIGN) = struct
         let set_filter_policy =
           foreign ("rocksdb_block_based_options_set_filter_policy") C.(t @-> FilterPolicy.t @-> returning void)
 
+        let set_cache_index_and_filter_blocks =
+          foreign ("rocksdb_block_based_options_set_cache_index_and_filter_blocks") C.(t @-> bool_to_uchar @-> returning void)
+
+
       end
+
+    end
+
+    module Cache = struct
+
+        type t = unit C.ptr
+        let t : t C.typ = C.ptr C.void
+
+        let create =
+          foreign ("rocksdb_cache_create_lru") C.(int_to_size_t @-> returning t)
+
+        let destroy =
+          foreign ("rocksdb_cache_destroy") C.(t @-> returning void)
+
+        let set_capacity =
+          foreign ("rocksdb_cache_set_capacity") C.(t @-> int_to_size_t @-> returning void)
+
+        let get_usage =
+          foreign ("rocksdb_cache_get_usage") C.(t @-> returning size_t_to_int)
+
+        let get_pinned_usage =
+          foreign ("rocksdb_cache_get_pinned_usage") C.(t @-> returning size_t_to_int)
 
     end
 
