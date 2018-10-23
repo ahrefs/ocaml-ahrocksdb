@@ -8,7 +8,7 @@ dev-repo: "https://git.ahrefs.com/ahrefs/ocaml-rocksdb.git"
 bug-reports: "https://git.ahrefs.com/ahrefs/ocaml-rocksdb/issues"
 available: [ ocaml-version >= "4.03.0"]
 depends: [
-  "dune" {build & >="1.0+beta10"}
+  "dune" {build}
   "ctypes" {>="0.12.0"}
   "astring"
   "rresult" {test}
