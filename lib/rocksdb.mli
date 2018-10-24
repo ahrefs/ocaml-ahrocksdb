@@ -49,9 +49,6 @@ module Options : sig
       type t
 
       val create : block_size:int -> t
-      val set_filter_policy : t -> Filter_policy.t -> (unit, error) result
-      val set_cache_index_and_filter_blocks : t -> bool -> (unit, error) result
-      val set_block_cache : t -> Cache.t -> (unit, error) result
 
     end
 
@@ -79,6 +76,9 @@ module Options : sig
     table_format : table_format option;
     max_open_files : int option;
     create_if_missing : bool;
+    filter_policy : Filter_policy.t option;
+    cache_index_and_filter_blocks : bool;
+    block_cache : Cache.t option;
   }
 
   (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)

@@ -36,8 +36,7 @@ let with_error_buffer fn =
   | Some err -> Error (`Msg err)
 
 let open_db ~config ~name =
-  Options.of_config config >>= fun options ->
-  Options.W.unwrap options @@ fun options ->
+  let options = Options.of_config config in
   match with_error_buffer @@ Rocksdb.open_ options name with
   | Ok db ->
     let t = wrap { db; config; } in
@@ -46,8 +45,7 @@ let open_db ~config ~name =
   | Error err -> Error err
 
 let open_db_read_only ?fail_on_wal:(fail=false) ~config ~name =
-  Options.of_config config >>= fun options ->
-  Options.W.unwrap options @@ fun options ->
+  let options = Options.of_config config in
   match with_error_buffer @@ Rocksdb.open_read_only options name fail with
   | Ok db ->
     let t = wrap { db; config; } in
@@ -56,8 +54,7 @@ let open_db_read_only ?fail_on_wal:(fail=false) ~config ~name =
   | Error err -> Error err
 
 let open_db_with_ttl ~config ~name ~ttl =
-  Options.of_config config >>= fun options ->
-  Options.W.unwrap options @@ fun options ->
+  let options = Options.of_config config in
   match with_error_buffer @@ Rocksdb.open_with_ttl options name ttl with
   | Ok db ->
     let t = wrap { db; config; } in

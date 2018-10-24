@@ -22,6 +22,7 @@ let write_one_ttl () =
   Utils.with_tmp_dir begin fun name ->
     open_db_with_ttl ~config:Options.default ~name ~ttl:1
     >>= fun db ->
+    print_endline "lol222";
     let write_options = Options.Write_options.create () in
     let key = "cyber" in
     let value = "llama" in
