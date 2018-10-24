@@ -109,8 +109,8 @@ module M(F: Cstubs.FOREIGN) = struct
     let set_compression =
       foreign "rocksdb_options_set_compression" C.(options @-> compression_view @-> returning void)
 
-    let set_compression_per_level size =
-      foreign "rocksdb_options_set_compression_per_level" C.(options @-> array size compression_view @-> int_to_size_t @-> returning void)
+    let set_compression_per_level =
+      foreign "rocksdb_options_set_compression_per_level" C.(options @-> ptr int @-> int_to_size_t @-> returning void)
 
     let set_error_if_exists =
       foreign "rocksdb_options_set_error_if_exists" C.(options @-> bool_to_uchar @-> returning void)

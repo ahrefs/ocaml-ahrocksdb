@@ -4,9 +4,9 @@ open Printf
 
 let simple_iterator_test () =
   Utils.with_tmp_dir begin fun name ->
-    open_db ~create:true ~config:Options.default ~name
+    open_db ~config:Options.default ~name
     >>= fun db ->
-    let write_options = Write_options.create () in
+    let write_options = Options.Write_options.create () in
     let kvs = Utils.get_random_kvalues 1000 in
     List.fold_left begin fun r (key, value) ->
       r >>= fun () ->
@@ -14,7 +14,7 @@ let simple_iterator_test () =
       put db write_options ~key ~value
     end (Ok ()) kvs
     >>= fun () ->
-    let read_options = Read_options.create () in
+    let read_options = Options.Read_options.create () in
     Iterator.create db read_options >>= fun it ->
     Iterator.seek it "prefix";
     let rec walk acc =
@@ -23,14 +23,14 @@ let simple_iterator_test () =
       | _ -> acc
     in
     let res = walk 0 in
-    if res = 1000 then Ok () else Error (sprintf "simple_iterator_test: got %d keys" res)
+    if res = 1000 then Ok () else Error (`Msg (sprintf "simple_iterator_test: got %d keys" res))
   end
 
 let simple_iterator_test_two_prefixes () =
   Utils.with_tmp_dir begin fun name ->
-    open_db ~create:true ~config:Options.default ~name
+    open_db ~config:Options.default ~name
     >>= fun db ->
-    let write_options = Write_options.create () in
+    let write_options = Options.Write_options.create () in
     let kvs = Utils.get_random_kvalues 1000 in
     List.fold_left begin fun r (key, value) ->
       r >>= fun () ->
@@ -40,7 +40,7 @@ let simple_iterator_test_two_prefixes () =
       >>= fun _ -> put db write_options ~key:key2 ~value
     end (Ok ()) kvs
     >>= fun () ->
-    let read_options = Read_options.create () in
+    let read_options = Options.Read_options.create () in
     Iterator.create db read_options >>= fun it ->
     Iterator.seek it "prefix";
     let rec walk acc =
@@ -49,7 +49,7 @@ let simple_iterator_test_two_prefixes () =
       | _ -> acc
     in
     let res = walk 0 in
-    if res = 1000 then Ok () else Error (sprintf "simple_iterator_test_two_prefixes: got %d keys" res)
+    if res = 1000 then Ok () else Error (`Msg (sprintf "simple_iterator_test_two_prefixes: got %d keys" res))
   end
 
 let tests = [
