@@ -4,8 +4,7 @@ open Printf
 
 let write_one () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     let key = "cyber" in
@@ -21,8 +20,7 @@ let write_one () =
 
 let write_one_ttl () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db_with_ttl ~create:true ~options ~name ~ttl:1
+    open_db_with_ttl ~create:true ~config:Options.default ~name ~ttl:1
     >>= fun db ->
     let write_options = Write_options.create () in
     let key = "cyber" in
@@ -39,8 +37,7 @@ let write_one_ttl () =
   end
 let update_one () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     let key = "cyber" in
@@ -59,8 +56,7 @@ let update_one () =
 
 let delete_one () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     let key = "cyber" in
@@ -78,8 +74,7 @@ let delete_one () =
 
 let write_one_err () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     let key = "cyber" in
@@ -96,8 +91,7 @@ let write_one_err () =
 let write_batch_many () =
   let kvs = Utils.get_random_kvalues 10_000 in
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     Batch.simple_write_batch db write_options kvs;
@@ -114,8 +108,7 @@ let write_batch_many () =
 
 let write_many () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     let kvs = Utils.get_random_kvalues 10_000 in

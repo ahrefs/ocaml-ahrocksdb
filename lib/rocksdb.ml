@@ -20,6 +20,22 @@ module Options = struct
 
   end
 
+  module Cache = struct
+    module B = Options.Cache
+
+    type t = B.t
+
+    module LRU = struct
+
+      let create ~size =
+        let t = B.create size in
+        Gc.finalise B.destroy t;
+        t
+
+    end
+
+  end
+
   module Tables = struct
 
     module Block_based = struct
@@ -38,6 +54,8 @@ module Options = struct
 
       let set_cache_index_and_filter_blocks t b = B.set_cache_index_and_filter_blocks t b
 
+      let set_block_cache t cache = B.set_block_cache t cache
+
     end
 
   end
@@ -46,7 +64,8 @@ module Options = struct
 
   type config = {
     parallelism_level : int option;
-    compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ];
+    base_compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ];
+    compression_by_level : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ] list;
     optimize_filters_for_hits: bool option;
     disable_compaction : bool;
     max_flush_processes : int option;
@@ -65,7 +84,8 @@ module Options = struct
 
   let apply_config options {
       parallelism_level;
-      compression;
+      base_compression;
+      compression_by_level;
       optimize_filters_for_hits;
       disable_compaction;
       max_flush_processes;
@@ -100,12 +120,19 @@ module Options = struct
     match table_format with
     | Some (Block_based config) -> Options.set_block_based_table_factory options config
     | None -> ();
-    Options.set_compression options compression;
+    match compression_by_level with
+    | [] -> ()
+    | levels -> begin
+       let len = List.length levels in
+       Options.set_compression_per_level len options (Ctypes.CArray.of_list Ffi.V.compression_view levels) len
+    end;
+    Options.set_compression options base_compression;
     Options.set_disable_auto_compactions options disable_compaction
 
   let default = {
     parallelism_level = None;
-    compression = `No_compression;
+    base_compression = `No_compression;
+    compression_by_level = [];
     optimize_filters_for_hits = None;
     disable_compaction = false;
     max_flush_processes = None;
@@ -180,6 +207,7 @@ end
 
 type db = {
   mutable closed: bool;
+  config: Options.config;
   db: Rocksdb.db;
 }
 
@@ -196,12 +224,12 @@ let close_db = function
     Rocksdb.close db.db;
     Ok ()
 
-let wrap_db db = { db; closed = false }
+let wrap_db db config = { db; config; closed = false; }
 
 let unwrap_db db f =
   match db with
   | { closed = true; _ } -> Error "trying to access closed database handle"
-  | { db; _ } -> f db
+  | { db; config; _ } -> f db config
 
 let with_error_buffer fn =
   let errb = allocate string_opt None in
@@ -210,28 +238,31 @@ let with_error_buffer fn =
   | None -> Ok result
   | Some err -> Error err
 
-let open_db ?create:(create=false) ~options ~name =
+let open_db ?create:(create=false) ~config ~name =
+  let options = Options.options_of_config config in
   Ffi.Options.set_create_if_missing options create;
   match with_error_buffer @@ Rocksdb.open_ options name with
   | Ok t ->
-    let t = wrap_db t in
+    let t = wrap_db t config in
     Gc.finalise close t;
     Ok t
   | Error err -> Error err
 
-let open_db_read_only ?fail_on_wal:(fail=false) ~options ~name =
+let open_db_read_only ?fail_on_wal:(fail=false) ~config ~name =
+  let options = Options.options_of_config config in
   match with_error_buffer @@ Rocksdb.open_read_only options name fail with
   | Ok t ->
-    let t = wrap_db t in
+    let t = wrap_db t config in
     Gc.finalise close t;
     Ok t
   | Error err -> Error err
 
-let open_db_with_ttl ?create:(create=false) ~options ~name ~ttl =
+let open_db_with_ttl ?create:(create=false) ~config ~name ~ttl =
+  let options = Options.options_of_config config in
   Ffi.Options.set_create_if_missing options create;
   match with_error_buffer @@ Rocksdb.open_with_ttl options name ttl with
   | Ok t ->
-    let t = wrap_db t in
+    let t = wrap_db t config in
     Gc.finalise close t;
     Ok t
   | Error err -> Error err
@@ -240,20 +271,20 @@ let open_db_with_ttl ?create:(create=false) ~options ~name ~ttl =
 let put db write_options ~key ~value =
   let key_len = String.length key in
   let value_len = String.length value in
-  unwrap_db db @@ fun db ->
+  unwrap_db db @@ fun db _ ->
   Rocksdb.put db write_options (ocaml_string_start key) key_len (ocaml_string_start value) value_len
   |> with_error_buffer
 
 let delete db write_options key =
   let key_len = String.length key in
-  unwrap_db db @@ fun db ->
+  unwrap_db db @@ fun db _ ->
   Rocksdb.delete db write_options (ocaml_string_start key) key_len
   |> with_error_buffer
 
 let get db read_options key =
   let key_len = String.length key in
   let result_len = allocate Ffi.V.int_to_size_t 0 in
-  let result = unwrap_db db @@ fun db ->
+  let result = unwrap_db db @@ fun db _ ->
     with_error_buffer @@ Rocksdb.get db read_options (ocaml_string_start key) key_len result_len
   in
   match result with
@@ -267,16 +298,16 @@ let get db read_options key =
       `Ok result
 
 let flush db flush_options =
-  unwrap_db db @@ fun db ->
+  unwrap_db db @@ fun db _ ->
   Rocksdb.flush db flush_options
   |> with_error_buffer
 
 let compact_now db =
-  unwrap_db db @@ fun db ->
+  unwrap_db db @@ fun db _ ->
   Ok (Rocksdb.compact_range db None 0 None 0)
 
 let stats db =
-  unwrap_db db @@ fun db ->
+  unwrap_db db @@ fun db _ ->
   match Rocksdb.property_value db "rocksdb.stats" with
   | None -> Ok None
   | Some stats ->
@@ -305,7 +336,7 @@ module Batch = struct
     Batch.put batch (ocaml_string_start key) key_len (ocaml_string_start value) value_len
 
   let write db write_options batch =
-    unwrap_db db @@ fun db ->
+    unwrap_db db @@ fun db _ ->
     Rocksdb.write db write_options batch |> with_error_buffer
 
   let simple_write_batch db write_options elts =
@@ -322,7 +353,7 @@ module Iterator = struct
   type t = Iterator.t
 
   let create db read_options =
-    unwrap_db db @@ fun db ->
+    unwrap_db db @@ fun db _ ->
     let t = Iterator.create db read_options in
     Gc.finalise Iterator.destroy t;
     Ok t

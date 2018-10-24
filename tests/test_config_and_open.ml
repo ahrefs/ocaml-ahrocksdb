@@ -3,8 +3,7 @@ open Rocksdb
 
 let simple_open_default () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     (* >>= fun _ -> open_db ~create:false ~options ~name *)
     >>= fun _ -> Ok () (* FIXME *)
   end
@@ -16,7 +15,7 @@ let open_not_random_setters () =
     Options.Tables.Block_based.set_filter_policy block_based_table filter_policy;
     let config = {
       Options.default with
-      Options.compression = `No_compression;
+      Options.base_compression = `No_compression;
       max_flush_processes = Some 2;
       compaction_trigger = Some 128;
       slowdown_writes_trigger = Some 128;
@@ -30,15 +29,13 @@ let open_not_random_setters () =
       max_open_files = Some (-1);
     }
     in
-    let options = Options.options_of_config config in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config ~name
     >>= fun _ -> Ok ()
   end
 
 let open_error () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    match open_db ~create:false ~options ~name with
+    match open_db ~create:false ~config:Options.default ~name with
     | Error _ -> Ok ()
     | Ok _ ->
       Error "Test_config_and_open.open error failed: open was successful"

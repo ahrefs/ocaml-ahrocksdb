@@ -4,8 +4,7 @@ open Printf
 
 let simple_iterator_test () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     let kvs = Utils.get_random_kvalues 1000 in
@@ -29,8 +28,7 @@ let simple_iterator_test () =
 
 let simple_iterator_test_two_prefixes () =
   Utils.with_tmp_dir begin fun name ->
-    let options = Options.options_of_config Options.default in
-    open_db ~create:true ~options ~name
+    open_db ~create:true ~config:Options.default ~name
     >>= fun db ->
     let write_options = Write_options.create () in
     let kvs = Utils.get_random_kvalues 1000 in

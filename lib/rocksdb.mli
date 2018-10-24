@@ -30,6 +30,18 @@ module Options : sig
 
   end
 
+  module Cache : sig
+
+    type t
+
+    module LRU : sig
+
+      val create : size:int -> t
+
+    end
+
+  end
+
   module Tables : sig
 
     module Block_based : sig
@@ -42,6 +54,8 @@ module Options : sig
 
       val set_cache_index_and_filter_blocks : t -> bool -> unit
 
+      val set_block_cache : t -> Cache.t -> unit
+
     end
 
   end
@@ -50,7 +64,8 @@ module Options : sig
 
   type config = {
     parallelism_level : int option; (** Number of background processes used by RocksDB *)
-    compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data *)
+    base_compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data at base level*)
+    compression_by_level : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ] list; (** Compression algorithm used to compact data in order for each level*)
     optimize_filters_for_hits: bool option;
     disable_compaction : bool; (** Disable compaction: data will not be compressed, but manual compaction can still be issued *)
     max_flush_processes : int option; (** Number of background workers dedicated to flush *)
@@ -117,7 +132,7 @@ end
 (** Opaque database handle *)
 type db
 
-val open_db : ?create:bool -> options:Options.options -> name:string -> (db, string) result
+val open_db : ?create:bool -> config:Options.config -> name:string -> (db, string) result
 (** [open_db create options name] will return an handle to the database in case
     of success or the error returned by RocksDB in case of failure.
     [create] allows to specify if the database must be created if it doesn't exists,
@@ -126,7 +141,7 @@ val open_db : ?create:bool -> options:Options.options -> name:string -> (db, str
     [name] is the path to the database.
 *)
 
-val open_db_read_only : ?fail_on_wal:bool -> options:Options.options -> name:string -> (db, string) result
+val open_db_read_only : ?fail_on_wal:bool -> config:Options.config -> name:string -> (db, string) result
 (** [open_db options name] will return a read-only handle to the database in case
     of success or the error returned by RocksDB in case of failure.
     [options] is {!Options.options} and must be created through {!Options.options_of_config}.
@@ -134,7 +149,7 @@ val open_db_read_only : ?fail_on_wal:bool -> options:Options.options -> name:str
     [fail_on_wal] returns an error if write log is not empty
 *)
 
-val open_db_with_ttl : ?create:bool -> options:Options.options -> name:string -> ttl:int -> (db, string) result
+val open_db_with_ttl : ?create:bool -> config:Options.config -> name:string -> ttl:int -> (db, string) result
 (** [open_db_with_ttl options name ttl] will return an handle to the database in case
     of success or the error returned by RocksDB in case of failure.
     [options] is {!Options.options} and must be created through {!Options.options_of_config}.

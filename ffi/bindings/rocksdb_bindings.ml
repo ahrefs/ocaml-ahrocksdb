@@ -34,33 +34,6 @@ module M(F: Cstubs.FOREIGN) = struct
 
     end
 
-    module Tables = struct
-
-      module BlockBased = struct
-
-        type t = unit C.ptr
-        let t : t C.typ = C.ptr C.void
-
-        let create =
-          foreign ("rocksdb_block_based_options_create") C.(void @-> returning t)
-
-        let destroy =
-          foreign ("rocksdb_block_based_options_destroy") C.(t @-> returning void)
-
-        let set_block_size =
-          foreign ("rocksdb_block_based_options_set_block_size") C.(t @-> int_to_size_t @-> returning void)
-
-        let set_filter_policy =
-          foreign ("rocksdb_block_based_options_set_filter_policy") C.(t @-> FilterPolicy.t @-> returning void)
-
-        let set_cache_index_and_filter_blocks =
-          foreign ("rocksdb_block_based_options_set_cache_index_and_filter_blocks") C.(t @-> bool_to_uchar @-> returning void)
-
-
-      end
-
-    end
-
     module Cache = struct
 
         type t = unit C.ptr
@@ -80,6 +53,35 @@ module M(F: Cstubs.FOREIGN) = struct
 
         let get_pinned_usage =
           foreign ("rocksdb_cache_get_pinned_usage") C.(t @-> returning size_t_to_int)
+
+    end
+
+    module Tables = struct
+
+      module BlockBased = struct
+
+        type t = unit C.ptr
+        let t : t C.typ = C.ptr C.void
+
+        let create =
+          foreign ("rocksdb_block_based_options_create") C.(void @-> returning t)
+
+        let destroy =
+          foreign ("rocksdb_block_based_options_destroy") C.(t @-> returning void)
+
+        let set_block_size =
+          foreign ("rocksdb_block_based_options_set_block_size") C.(t @-> int_to_size_t @-> returning void)
+
+        let set_block_cache =
+          foreign ("rocksdb_block_based_options_set_block_cache") C.(t @-> Cache.t @-> returning void)
+
+        let set_filter_policy =
+          foreign ("rocksdb_block_based_options_set_filter_policy") C.(t @-> FilterPolicy.t @-> returning void)
+
+        let set_cache_index_and_filter_blocks =
+          foreign ("rocksdb_block_based_options_set_cache_index_and_filter_blocks") C.(t @-> bool_to_uchar @-> returning void)
+
+      end
 
     end
 
@@ -106,6 +108,9 @@ module M(F: Cstubs.FOREIGN) = struct
 
     let set_compression =
       foreign "rocksdb_options_set_compression" C.(options @-> compression_view @-> returning void)
+
+    let set_compression_per_level size =
+      foreign "rocksdb_options_set_compression_per_level" C.(options @-> array size compression_view @-> int_to_size_t @-> returning void)
 
     let set_error_if_exists =
       foreign "rocksdb_options_set_error_if_exists" C.(options @-> bool_to_uchar @-> returning void)
