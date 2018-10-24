@@ -13,9 +13,9 @@ let write_one () =
     >>= fun () ->
     let read_options = Options.Read_options.create () in
     match get db read_options key with
-    | `Ok value' -> if String.equal value value' then Ok () else Error (`Msg (sprintf "Wrong value retrieved: %s expected %s" value' value))
-    | `Not_found -> Error (`Msg (sprintf "key %s not found" key))
-    | `Error err -> Error err
+    | Ok `Found value' -> if String.equal value value' then Ok () else Error (`Msg (sprintf "Wrong value retrieved: %s expected %s" value' value))
+    | Ok `Not_found -> Error (`Msg (sprintf "key %s not found" key))
+    | Error err -> Error err
   end
 
 let write_one_ttl () =
@@ -31,9 +31,9 @@ let write_one_ttl () =
     Rocksdb.compact_now db >>= fun () ->
     let read_options = Options.Read_options.create () in
     match get db read_options key with
-    | `Ok _ -> Error (`Msg "Key was not removed by compaction in TTL mode")
-    | `Not_found -> Ok ()
-    | `Error err -> Error err
+    | Ok `Found _ -> Error (`Msg "Key was not removed by compaction in TTL mode")
+    | Ok `Not_found -> Ok ()
+    | Error err -> Error err
   end
 let update_one () =
   Utils.with_tmp_dir begin fun name ->
@@ -49,9 +49,9 @@ let update_one () =
     >>= fun () ->
     let read_options = Options.Read_options.create () in
     match get db read_options key with
-    | `Ok value' -> if String.equal value2 value' then Ok () else Error (`Msg (sprintf "Wrong value retrieved: %s expected %s" value' value2))
-    | `Not_found -> Error (`Msg (sprintf "key %s not found" key))
-    | `Error err -> Error err
+    | Ok `Found value' -> if String.equal value2 value' then Ok () else Error (`Msg (sprintf "Wrong value retrieved: %s expected %s" value' value2))
+    | Ok `Not_found -> Error (`Msg (sprintf "key %s not found" key))
+    | Error err -> Error err
   end
 
 let delete_one () =
@@ -67,9 +67,9 @@ let delete_one () =
     >>= fun () ->
     let read_options = Options.Read_options.create () in
     match get db read_options key with
-    | `Ok _ -> Error (`Msg "delete_one")
-    | `Not_found -> Ok ()
-    | `Error err -> Error err
+    | Ok `Found _ -> Error (`Msg "delete_one")
+    | Ok `Not_found -> Ok ()
+    | Error err -> Error err
   end
 
 let write_one_err () =
@@ -83,9 +83,9 @@ let write_one_err () =
     >>= fun () ->
     let read_options = Options.Read_options.create () in
     match get db read_options "bad key" with
-    | `Ok _ -> Error (`Msg "write_one_err")
-    | `Not_found -> Ok ()
-    | `Error err -> Error err
+    | Ok `Found _ -> Error (`Msg "write_one_err")
+    | Ok `Not_found -> Ok ()
+    | Error err -> Error err
   end
 
 let write_batch_many () =
@@ -100,9 +100,9 @@ let write_batch_many () =
     List.fold_left begin fun r (key, value) ->
       r >>= fun () ->
       match get db read_options key with
-      | `Ok value' -> if String.equal value value' then Ok () else Error (`Msg "write_many: bad value")
-      | `Not_found -> Error (`Msg "write_many")
-      | `Error err -> Error err
+      | Ok `Found value' -> if String.equal value value' then Ok () else Error (`Msg "write_many: bad value")
+      | Ok `Not_found -> Error (`Msg "write_many")
+      | Error err -> Error err
     end (Ok ()) kvs
   end
 
@@ -121,9 +121,9 @@ let write_many () =
     List.fold_left begin fun r (key, value) ->
       r >>= fun () ->
       match get db read_options key with
-      | `Ok value' -> if String.equal value value' then Ok () else Error (`Msg "write_many: bad value")
-      | `Not_found -> Error (`Msg "write_many")
-      | `Error err -> Error err
+      | Ok `Found value' -> if String.equal value value' then Ok () else Error (`Msg "write_many: bad value")
+      | Ok `Not_found -> Error (`Msg "write_many")
+      | Error err -> Error err
     end (Ok ()) kvs
   end
 

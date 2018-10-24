@@ -161,7 +161,7 @@ val delete : t -> Options.Write_options.t -> string -> (unit, error) result
     Return unit on success, RocksDB reported error on error.
 *)
 
-val get : t -> Options.Read_options.t -> string -> [ `Error of error | `Not_found | `Ok of string ]
+val get : t -> Options.Read_options.t -> string -> ([ `Not_found | `Found of string ], error) result
 (** [get db read_options key] will fetch key [key] on database [db].
     Returns `Ok value if the key is found, `Not_found otherwise, and `Error if a failure occurred.
 *)

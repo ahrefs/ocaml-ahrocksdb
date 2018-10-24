@@ -85,14 +85,14 @@ let get db read_options key =
     with_error_buffer @@ Rocksdb.get db read_options (ocaml_string_start key) key_len result_len
   in
   match result with
-  | Error err -> `Error err
+  | Error err -> Error err
   | Ok result_ptr ->
     match Ctypes.is_null (to_voidp result_ptr) with
-    | true -> `Not_found
+    | true -> Ok `Not_found
     | false ->
       let result = string_from_ptr result_ptr ~length:(!@ result_len) in
       Gc.finalise (fun result_ptr -> Rocksdb.free (to_voidp result_ptr)) result_ptr;
-      `Ok result
+      Ok (`Found result)
 
 let flush db flush_options =
   unwrap db @@ fun { db; _ } ->
