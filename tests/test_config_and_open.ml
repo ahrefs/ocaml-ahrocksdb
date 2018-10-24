@@ -15,7 +15,7 @@ let open_not_random_setters () =
     Options.Tables.Block_based.set_filter_policy block_based_table filter_policy;
     let config = {
       Options.default with
-      Options.base_compression = `No_compression;
+      Options.base_compression = `Snappy;
       max_flush_processes = Some 2;
       compaction_trigger = Some 128;
       slowdown_writes_trigger = Some 128;
@@ -23,7 +23,13 @@ let open_not_random_setters () =
       disable_compaction = false;
       parallelism_level = Some 4;
       memtable_representation = None;
-      num_levels = Some 1;
+      num_levels = Some 4;
+      compression_by_level = [
+       `Snappy;
+       `No_compression;
+       `No_compression;
+       `No_compression;
+      ];
       target_base_file_size = None;
       table_format = Some (Block_based block_based_table);
       max_open_files = Some (-1);
