@@ -10,9 +10,9 @@ let simple_open_default () =
 
 let open_not_random_setters () =
   Utils.with_tmp_dir begin fun name ->
+    let block_cache = Options.Cache.LRU.create ~size:(10 * 1024 * 1024) in
     let filter_policy = Options.Filter_policy.create_bloom_full ~bits_per_key:12 in
     let block_based_table = Options.Tables.Block_based.create ~block_size:(64 * 1024 *1024) in
-    Options.Tables.Block_based.set_filter_policy block_based_table filter_policy >>= fun () ->
     let config = {
       Options.default with
       Options.base_compression = `Snappy;
@@ -22,8 +22,10 @@ let open_not_random_setters () =
       stop_writes_trigger = Some 256;
       disable_compaction = false;
       parallelism_level = Some 4;
+      filter_policy = Some filter_policy;
       memtable_representation = None;
       num_levels = Some 10;
+      block_cache = Some block_cache;
       compression_by_level = [
        `No_compression;
        `No_compression;
