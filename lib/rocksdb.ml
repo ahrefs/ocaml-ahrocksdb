@@ -5,6 +5,7 @@ module Options = Rocksdb_options
 open Ctypes
 
 type error = [ `Msg of string ]
+let msg s = Error (`Msg s)
 
 type db = {
   config: Options.config;
@@ -26,14 +27,14 @@ let close_db t =
   | Ok () ->
     t.valid <- false;
     Ok ()
-  | Error _ -> Error (`Msg "trying to close a database handle already closed")
+  | Error _ -> msg "trying to close a database handle already closed"
 
 let with_error_buffer fn =
   let errb = allocate string_opt None in
   let result = fn errb in
   match !@ errb with
   | None -> Ok result
-  | Some err -> Error (`Msg err)
+  | Some err -> msg err
 
 let open_db ~config ~name =
   let options = Options.of_config config in
@@ -42,7 +43,7 @@ let open_db ~config ~name =
     let t = wrap { db; config; } in
     Gc.finalise (fun t -> on_finalise t (fun { db; _ } -> Rocksdb.close db)) t;
     Ok t
-  | Error err -> Error err
+  | Error e -> Error e
 
 let open_db_read_only ?fail_on_wal:(fail=false) ~config ~name =
   let options = Options.of_config config in
