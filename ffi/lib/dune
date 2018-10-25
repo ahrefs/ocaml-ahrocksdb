@@ -15,7 +15,12 @@
  (modules g m)
  (c_names rocksdb_stubs)
  (flags (:standard -w -9-27-32-34))
- (c_library_flags -lrocksdb)
- (c_flags (-I/home/engil/rocksdb/include/rocksdb -Wno-discarded-qualifiers))
+ (c_library_flags (:include c_library_flags.sexp))
+ (c_flags (:include c_flags.sexp) -Wno-discarded-qualifiers)
  (libraries rocksdb.bindings ctypes.stubs ctypes)
 )
+
+(rule
+ (targets c_flags.sexp c_library_flags.sexp)
+ (deps    (:discover config/discover.exe))
+ (action  (run %{discover})))
