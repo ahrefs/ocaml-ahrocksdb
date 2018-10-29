@@ -1,6 +1,7 @@
 module Ffi = Rocksdb_ffi.M
 module Rocksdb = Ffi.Rocksdb
 module Options = Rocksdb_options
+module Perf_context = Rocksdb_perfcontext
 
 open Ctypes
 
@@ -10,6 +11,7 @@ let msg s = Error (`Msg s)
 type db = {
   config: Options.config;
   db: Rocksdb.db;
+  perf_context: Perf_context.t option;
 }
 module Desc = struct
 
@@ -36,29 +38,36 @@ let with_error_buffer fn =
   | None -> Ok result
   | Some err -> msg err
 
+let perf_context_init = function
+  | false -> None
+  | true -> Some (Perf_context.create ())
+
 let open_db ~config ~name =
   let options = Options.of_config config in
+  let perf_context = perf_context_init config.trace_perf in
   match with_error_buffer @@ Rocksdb.open_ options name with
   | Ok db ->
-    let t = wrap { db; config; } in
+    let t = wrap { db; config; perf_context; } in
     Gc.finalise (fun t -> on_finalise t (fun { db; _ } -> Rocksdb.close db)) t;
     Ok t
   | Error e -> Error e
 
 let open_db_read_only ?fail_on_wal:(fail=false) ~config ~name =
   let options = Options.of_config config in
+  let perf_context = perf_context_init config.trace_perf in
   match with_error_buffer @@ Rocksdb.open_read_only options name fail with
   | Ok db ->
-    let t = wrap { db; config; } in
+    let t = wrap { db; config; perf_context; } in
     Gc.finalise (fun t -> on_finalise t (fun { db; _ } -> Rocksdb.close db)) t;
     Ok t
   | Error err -> Error err
 
 let open_db_with_ttl ~config ~name ~ttl =
   let options = Options.of_config config in
+  let perf_context = perf_context_init config.trace_perf in
   match with_error_buffer @@ Rocksdb.open_with_ttl options name ttl with
   | Ok db ->
-    let t = wrap { db; config; } in
+    let t = wrap { db; config; perf_context; } in
     Gc.finalise (fun t -> on_finalise t (fun { db; _ } -> Rocksdb.close db)) t;
     Ok t
   | Error err -> Error err

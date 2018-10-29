@@ -349,4 +349,32 @@ module M(F: Cstubs.FOREIGN) = struct
 
   end
 
+  module PerfContext = struct
+
+
+    type t = unit C.ptr
+    let t : t C.typ = C.ptr C.void
+
+    let create =
+      foreign "rocksdb_perfcontext_create" C.(void @-> returning t)
+
+    let reset =
+      foreign "rocksdb_perfcontext_reset" C.(t @-> returning void)
+
+    let destroy =
+      foreign "rocksdb_perfcontext_destroy" C.(t @-> returning void)
+
+    module Counters = struct
+
+      type t = int64
+      let t = Ctypes.int64_t
+
+      include T
+
+    end
+
+    let metric =
+      foreign "rocksdb_perfcontext_metric" C.(t @-> Counters.t @-> returning int)
+
+  end
 end
