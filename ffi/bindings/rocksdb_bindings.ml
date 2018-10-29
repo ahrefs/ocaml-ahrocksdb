@@ -1,3 +1,4 @@
+module T = Rocksdb_types.Struct_stubs(T)
 
 module M(F: Cstubs.FOREIGN) = struct
 

@@ -53,8 +53,10 @@ match c_flag with
    if (String.compare version minimum_rocks_version) > 0 then failwith (sprintf "installed RocksDB installation is too old: found %s, expected %s minimum" version minimum_rocks_version);
 
    C.Flags.write_sexp "c_flags.sexp"         ["-I" ^ c_flag];
-   C.Flags.write_sexp "c_library_flags.sexp" link_flags
+   C.Flags.write_sexp "c_library_flags.sexp" link_flags;
+   C.Flags.write_lines "c_flags.txt"         ["-I" ^ c_flag];
+   C.Flags.write_lines "c_library_flags.txt" link_flags
 
-   with Failure s -> C.die "failure: %s" s
+  with Failure s -> C.die "failure: %s" s
 
 end
