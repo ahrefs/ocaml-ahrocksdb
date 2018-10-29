@@ -51,10 +51,10 @@ module M(F: Cstubs.FOREIGN) = struct
           foreign ("rocksdb_cache_set_capacity") C.(t @-> int_to_size_t @-> returning void)
 
         let get_usage =
-          foreign ("rocksdb_cache_get_usage") C.(t @-> returning size_t_to_int)
+          foreign ("rocksdb_cache_get_usage") C.(t @-> returning int_to_size_t)
 
         let get_pinned_usage =
-          foreign ("rocksdb_cache_get_pinned_usage") C.(t @-> returning size_t_to_int)
+          foreign ("rocksdb_cache_get_pinned_usage") C.(t @-> returning int_to_size_t)
 
     end
 

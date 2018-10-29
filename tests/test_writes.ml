@@ -109,7 +109,7 @@ let write_batch_many () =
 
 let write_many () =
   Utils.with_tmp_dir begin fun name ->
-    open_db ~config:Options.default ~name
+    open_db ~config:{ Options.default with trace_perf = true; } ~name
     >>= fun db ->
     let write_options = Options.Write_options.create () in
     let kvs = Utils.get_random_kvalues 10_000 in
@@ -119,6 +119,7 @@ let write_many () =
     end (Ok ()) kvs
     >>= fun () ->
     let read_options = Options.Read_options.create () in
+    Gc.full_major ();
     List.fold_left begin fun r (key, value) ->
       r >>= fun () ->
       match get db read_options key with

@@ -2,6 +2,7 @@ module Ffi = Rocksdb_ffi.M
 module Rocksdb = Ffi.Rocksdb
 module Options = Rocksdb_options
 module Perf_context = Rocksdb_perfcontext
+module Metrics = Perf_context.Metrics
 
 open Ctypes
 
@@ -118,6 +119,18 @@ let stats db =
     let string = coerce (ptr char) string stats in
     Gc.finalise (fun stats -> Rocksdb.free (to_voidp stats)) stats;
     Ok (Some string)
+
+let perf_counters db metrics =
+  unwrap db @@ fun { perf_context; _; } ->
+  match perf_context with
+  | Some perf_context -> Ok (List.map (fun metric -> Perf_context.metric perf_context metric) metrics)
+  | None -> msg "query_perf_context: trace_perf is disabled, no metrics to get"
+
+let get_cache_usage db =
+  unwrap db @@ fun { config; _ } ->
+  match config.block_cache with
+  | Some cache -> Ok (Options.Cache.LRU.get_usage cache)
+  | None -> msg "get_cache_usage: no cache was set for this database"
 
 module Batch = struct
 

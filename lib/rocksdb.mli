@@ -19,6 +19,8 @@ type error = [ `Msg of string ]
 
 *)
 
+module Metrics = Rocksdb_perfcontext.Metrics
+
 module Options : sig
 
   module Filter_policy : sig
@@ -177,6 +179,10 @@ val compact_now : t -> (unit, error) result
 
 val stats : t -> (string option, error) result
 (** [stats db] will return the accumulated stats for this database handle as an optional string form *)
+
+val perf_counters : t -> Metrics.t list -> (int list, error) result
+
+val get_cache_usage : t -> (int, error) result
 
 val close_db : t -> (unit, error) result
 (** [close db] explicitly closes the db handle. Any further access will raise an error *)
