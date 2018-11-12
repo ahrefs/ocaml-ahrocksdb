@@ -1,19 +1,19 @@
 module Ffi = Rocksdb_ffi.M
 module Rocksdb = Ffi.Rocksdb
+
 module Options = Rocksdb_options
-module Perf_context = Rocksdb_perfcontext
-module Metrics = Perf_context.Metrics
 
 open Ctypes
 
 type error = [ `Msg of string ]
+
 let msg s = Error (`Msg s)
 
 type db = {
   config: Options.config;
   db: Rocksdb.db;
-  perf_context: Perf_context.t option;
 }
+
 module Desc = struct
 
   let kind = "rocksdb_db"
@@ -39,36 +39,29 @@ let with_error_buffer fn =
   | None -> Ok result
   | Some err -> msg err
 
-let perf_context_init = function
-  | false -> None
-  | true -> Some (Perf_context.create ())
-
 let open_db ~config ~name =
   let options = Options.of_config config in
-  let perf_context = perf_context_init config.trace_perf in
   match with_error_buffer @@ Rocksdb.open_ options name with
   | Ok db ->
-    let t = wrap { db; config; perf_context; } in
+    let t = wrap { db; config; } in
     Gc.finalise (fun t -> on_finalise t (fun { db; _ } -> Rocksdb.close db)) t;
     Ok t
   | Error e -> Error e
 
 let open_db_read_only ?fail_on_wal:(fail=false) ~config ~name =
   let options = Options.of_config config in
-  let perf_context = perf_context_init config.trace_perf in
   match with_error_buffer @@ Rocksdb.open_read_only options name fail with
   | Ok db ->
-    let t = wrap { db; config; perf_context; } in
+    let t = wrap { db; config; } in
     Gc.finalise (fun t -> on_finalise t (fun { db; _ } -> Rocksdb.close db)) t;
     Ok t
   | Error err -> Error err
 
 let open_db_with_ttl ~config ~name ~ttl =
   let options = Options.of_config config in
-  let perf_context = perf_context_init config.trace_perf in
   match with_error_buffer @@ Rocksdb.open_with_ttl options name ttl with
   | Ok db ->
-    let t = wrap { db; config; perf_context; } in
+    let t = wrap { db; config; } in
     Gc.finalise (fun t -> on_finalise t (fun { db; _ } -> Rocksdb.close db)) t;
     Ok t
   | Error err -> Error err
@@ -119,12 +112,6 @@ let stats db =
     let string = coerce (ptr char) string stats in
     Gc.finalise (fun stats -> Rocksdb.free (to_voidp stats)) stats;
     Ok (Some string)
-
-let perf_counters db metrics =
-  unwrap db @@ fun { perf_context; _; } ->
-  match perf_context with
-  | Some perf_context -> Ok (List.map (fun metric -> Perf_context.metric perf_context metric) metrics)
-  | None -> msg "query_perf_context: trace_perf is disabled, no metrics to get"
 
 let get_cache_usage db =
   unwrap db @@ fun { config; _ } ->
@@ -211,5 +198,23 @@ module Iterator = struct
        | Not_found -> None
     end
     else None
+
+end
+
+module Perf_context = struct
+
+  type perf_context = Ffi.PerfContext.t
+  type counter = Ffi.PerfContext.Counters.t
+
+  module Counters = Ffi.PerfContext.Counters
+
+  let create () =
+    let t = Ffi.PerfContext.create () in
+    Gc.finalise Ffi.PerfContext.destroy t;
+    t
+
+  let reset = Ffi.PerfContext.reset
+
+  let metric = Ffi.PerfContext.metric
 
 end

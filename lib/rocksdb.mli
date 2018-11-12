@@ -19,7 +19,6 @@ type error = [ `Msg of string ]
 
 *)
 
-module Metrics = Rocksdb_perfcontext.Metrics
 
 module Options : sig
 
@@ -46,46 +45,15 @@ module Options : sig
 
   module Tables : sig
 
+    type format
+
     module Block_based : sig
 
-      type t
-
-      val create : block_size:int -> t
+      val create : block_size:int -> format
 
     end
 
   end
-
-  type table_format = Block_based of Tables.Block_based.t
-
-  (** RocksDB main configuration record *)
-  type config = {
-    parallelism_level : int option; (** Number of background processes used by RocksDB *)
-    base_compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data at base level*)
-    compression_by_level : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ] list; (** Compression algorithm used to compact data in order for each level*)
-    optimize_filters_for_hits: bool option;
-    disable_compaction : bool; (** Disable compaction: data will not be compressed, but manual compaction can still be issued *)
-    max_flush_processes : int option; (** Number of background workers dedicated to flush *)
-    compaction_trigger : int option; (** Maximum size for a file in level0 to wait for initiating compaction *)
-    slowdown_writes_trigger : int option; (** TODO *)
-    stop_writes_trigger : int option; (** TODO *)
-    memtable_representation : [ `Vector ] option;
-    num_levels : int option;
-    write_buffer_size : int option;
-    max_write_buffer_number : int option;
-    min_write_buffer_number_to_merge : int option;
-    target_base_file_size : int option;
-    table_format : table_format option;
-    max_open_files : int option;
-    create_if_missing : bool;
-    filter_policy : Filter_policy.t option;
-    cache_index_and_filter_blocks : bool;
-    block_cache : Cache.t option;
-    trace_perf : bool;
-  }
-
-  (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)
-  val default : config
 
   (** Write options *)
   module Write_options : sig
@@ -125,6 +93,36 @@ module Options : sig
      *)
 
   end
+
+  (** RocksDB main configuration record *)
+  type config = {
+    parallelism_level : int option; (** Number of background processes used by RocksDB *)
+    base_compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data at base level*)
+    compression_by_level : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ] list; (** Compression algorithm used to compact data in order for each level*)
+    optimize_filters_for_hits: bool option;
+    disable_compaction : bool; (** Disable compaction: data will not be compressed, but manual compaction can still be issued *)
+    max_flush_processes : int option; (** Number of background workers dedicated to flush *)
+    compaction_trigger : int option; (** Maximum size for a file in level0 to wait for initiating compaction *)
+    slowdown_writes_trigger : int option; (** TODO *)
+    stop_writes_trigger : int option; (** TODO *)
+    memtable_representation : [ `Vector ] option;
+    num_levels : int option;
+    write_buffer_size : int option;
+    max_write_buffer_number : int option;
+    min_write_buffer_number_to_merge : int option;
+    target_base_file_size : int option;
+    table_format : Tables.format option;
+    max_open_files : int option;
+    create_if_missing : bool;
+    filter_policy : Filter_policy.t option;
+    cache_index_and_filter_blocks : bool;
+    block_cache : Cache.t option;
+    trace_perf : bool;
+  }
+
+  (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)
+  val default : config
+
 
 end
 
@@ -180,8 +178,6 @@ val compact_now : t -> (unit, error) result
 val stats : t -> (string option, error) result
 (** [stats db] will return the accumulated stats for this database handle as an optional string form *)
 
-val perf_counters : t -> Metrics.t list -> (int list, error) result
-
 val get_cache_usage : t -> (int, error) result
 
 val close_db : t -> (unit, error) result
@@ -234,5 +230,91 @@ module Iterator : sig
   val next : iterator -> unit
 
   val is_valid : iterator -> bool
+
+end
+
+module Perf_context : sig
+
+
+  type perf_context
+  type counter
+
+  module Counters : sig
+
+    val user_key_comparison_count : counter
+    val block_cache_hit_count : counter
+    val block_read_count : counter
+    val block_read_byte : counter
+    val block_read_time : counter
+    val block_checksum_time : counter
+    val block_decompress_time : counter
+    val get_read_bytes : counter
+    val multiget_read_bytes : counter
+    val iter_read_bytes : counter
+    val internal_key_skipped_count : counter
+    val internal_delete_skipped_count : counter
+    val internal_recent_skipped_count : counter
+    val internal_merge_count : counter
+    val get_snapshot_time : counter
+    val get_from_memtable_time : counter
+    val get_from_memtable_count : counter
+    val get_post_process_time : counter
+    val get_from_output_files_time : counter
+    val seek_on_memtable_time : counter
+    val seek_on_memtable_count : counter
+    val next_on_memtable_count : counter
+    val prev_on_memtable_count : counter
+    val seek_child_seek_time : counter
+    val seek_child_seek_count : counter
+    val seek_min_heap_time : counter
+    val seek_max_heap_time : counter
+    val seek_internal_seek_time : counter
+    val find_next_user_entry_time : counter
+    val write_wal_time : counter
+    val write_memtable_time : counter
+    val write_delay_time : counter
+    val write_pre_and_post_process_time : counter
+    val db_mutex_lock_nanos : counter
+    val db_condition_wait_nanos : counter
+    val merge_operator_time_nanos : counter
+    val read_index_block_nanos : counter
+    val read_filter_block_nanos : counter
+    val new_table_block_iter_nanos : counter
+    val new_table_iterator_nanos : counter
+    val block_seek_nanos : counter
+    val find_table_nanos : counter
+    val bloom_memtable_hit_count : counter
+    val bloom_memtable_miss_count : counter
+    val bloom_sst_hit_count : counter
+    val bloom_sst_miss_count : counter
+    val key_lock_wait_time : counter
+    val key_lock_wait_count : counter
+    val env_new_sequential_file_nanos : counter
+    val env_new_random_access_file_nanos : counter
+    val env_new_writable_file_nanos : counter
+    val env_reuse_writable_file_nanos : counter
+    val env_new_random_rw_file_nanos : counter
+    val env_new_directory_nanos : counter
+    val env_file_exists_nanos : counter
+    val env_get_children_nanos : counter
+    val env_get_children_file_attributes_nanos : counter
+    val env_delete_file_nanos : counter
+    val env_create_dir_nanos : counter
+    val env_create_dir_if_missing_nanos : counter
+    val env_delete_dir_nanos : counter
+    val env_get_file_size_nanos : counter
+    val env_get_file_modification_time_nanos : counter
+    val env_rename_file_nanos : counter
+    val env_link_file_nanos : counter
+    val env_lock_file_nanos : counter
+    val env_unlock_file_nanos : counter
+    val env_new_logger_nanos : counter
+    val total_metric_count : counter
+
+  end
+
+  val create : unit -> perf_context
+  val reset : perf_context -> unit
+  val metric : perf_context -> counter -> int
 
 end

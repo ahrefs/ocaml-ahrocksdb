@@ -29,15 +29,15 @@ module Tables = struct
 
   open Tables
 
-  module Block_based = struct
+  type format = Block_based of BlockBased.t
 
-    type t = BlockBased.t
+  module Block_based = struct
 
     let create ~block_size =
       let t = BlockBased.create () in
       BlockBased.set_block_size t block_size;
       Gc.finalise BlockBased.destroy t;
-      t
+      Block_based t
 
     let set_filter_policy t filter_policy = BlockBased.set_filter_policy t filter_policy
     let set_cache_index_and_filter_blocks t b = BlockBased.set_cache_index_and_filter_blocks t b
@@ -49,7 +49,6 @@ end
 
 (** Actual configuration handling **)
 
-type table_format = Block_based of Tables.Block_based.t
 
 type t = options
 
@@ -74,7 +73,7 @@ type config = {
     max_write_buffer_number : int option;
     min_write_buffer_number_to_merge : int option;
     target_base_file_size : int option;
-    table_format : table_format option;
+    table_format : Tables.format option;
     max_open_files : int option;
     create_if_missing : bool;
     filter_policy : Filter_policy.t option;

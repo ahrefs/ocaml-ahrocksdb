@@ -33,7 +33,7 @@ let open_not_random_setters () =
        `No_compression;
       ];
       target_base_file_size = None;
-      table_format = Some (Block_based block_based_table);
+      table_format = Some block_based_table;
       max_open_files = Some (-1);
     }
     in
