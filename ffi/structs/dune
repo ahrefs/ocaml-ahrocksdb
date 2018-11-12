@@ -7,11 +7,12 @@
 (executable
  (name driver)
  (modules driver)
- (libraries rocksdb.types ctypes.stubs ctypes)
+ (libraries rocksdb_types ctypes.stubs ctypes)
 )
 
 (library
  (name rocksdb_types)
+ (public_name rocksdb.types)
  (modules rocksdb_types)
  (libraries ctypes.stubs ctypes)
 )
