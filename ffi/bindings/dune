@@ -20,6 +20,5 @@
  (name rocksdb_bindings)
  (flags (:standard -w no-unused-parameter))
  (synopsis "Ctypes bindings that describe the librocksdb FFI")
- (public_name rocksdb.bindings)
  (modules rocksdb_bindings views t)
  (libraries rocksdb_types ctypes.stubs ctypes))
