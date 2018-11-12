@@ -10,19 +10,24 @@ no function is left never called and untested.
 
 type error = [ `Msg of string ]
 
-(** High-level bindings for RocksDB open options
-
-  This module provides a binding to the open options available in Rock's C FFIs.
-  It provides a type [config] which holds the configuration options for opening a Rocksdb database
-  that can be then turned into a proper [options] type that will be used to access
-  a database.
-
-*)
-
 
 module Options : sig
 
+  (** High-level bindings for RocksDB open options
+
+      This module provides a binding to the open options available in Rock's C FFIs.
+      It provides a type [config] which holds the configuration options for opening a Rocksdb database.
+      Configuration settings are then mapped to the appropriate FFI calls when the database is opened.
+
+  *)
+
   module Filter_policy : sig
+
+    (** Filter policy bindings
+
+        This module is used to create a bloom filter to be set in the {!config} type.
+        More information about the different bloom filter kinds available here: https://github.com/facebook/rocksdb/wiki/RocksDB-Bloom-Filter
+    *)
 
     type t
 
@@ -33,10 +38,17 @@ module Options : sig
 
   module Cache : sig
 
+    (** Block-caching facilities
+
+        This module is used to instantiate cache objects that can be set in the {!config} type.
+        See: https://github.com/facebook/rocksdb/wiki/Block-Cache
+    *)
+
     type t
 
     module LRU : sig
 
+      (** [create size] will create a new LRU cache object of size [size] (in bytes) *)
       val create : size:int -> t
 
     end
@@ -46,6 +58,10 @@ module Options : sig
   module Tables : sig
 
     type format
+
+    (** Table format facilities bindings
+        See: https://github.com/facebook/rocksdb/wiki/A-Tutorial-of-RocksDB-SST-formats
+    *)
 
     module Block_based : sig
 
@@ -132,14 +148,12 @@ type t
 val open_db : config:Options.config -> name:string -> (t, error) result
 (** [open_db options name] will return an handle to the database in case
     of success or the error returned by RocksDB in case of failure.
-    [options] is {!Options.options} and must be created through {!Options.options_of_config}.
     [name] is the path to the database.
 *)
 
 val open_db_read_only : ?fail_on_wal:bool -> config:Options.config -> name:string -> (t, error) result
 (** [open_db options name] will return a read-only handle to the database in case
     of success or the error returned by RocksDB in case of failure.
-    [options] is {!Options.options} and must be created through {!Options.options_of_config}.
     [name] is the path to the database.
     [fail_on_wal] returns an error if write log is not empty
 *)
@@ -147,7 +161,6 @@ val open_db_read_only : ?fail_on_wal:bool -> config:Options.config -> name:strin
 val open_db_with_ttl : config:Options.config -> name:string -> ttl:int -> (t, error) result
 (** [open_db_with_ttl options name ttl] will return an handle to the database in case
     of success or the error returned by RocksDB in case of failure.
-    [options] is {!Options.options} and must be created through {!Options.options_of_config}.
     [name] is the path to the database.
     [ttl] Time in seconds after which a key should be removed (best-effort basis, during compaction)
 *)
@@ -185,7 +198,7 @@ val close_db : t -> (unit, error) result
 
 (** Batch processing
     RocksDB allows to batch operations through a dedicated batch object that must be fed to {!write}.
-    A batch object {!Batch.t} is a collection of operation to run on a database. (like {!Batch.put} or delete).
+    A batch object {!Batch.batch} is a collection of operation to run on a database. (like {!Batch.put} or delete).
 *)
 module Batch : sig
 
@@ -195,8 +208,10 @@ module Batch : sig
   (** [create] will create a batch job to be used to batch operation on the database. *)
   val create : unit -> batch
 
+  (** [count] number of operations in the batch object *)
   val count : batch -> int
 
+  (** clear operations from the batch object *)
   val clear : batch -> unit
 
   (** [put batch key value] will take a [batch] job and stage the writing of the [key] key and [value] value in the batch job. *)
@@ -235,6 +250,10 @@ end
 
 module Perf_context : sig
 
+
+  (** Perf context counters bindings
+      See: https://github.com/facebook/rocksdb/wiki/Perf-Context-and-IO-Stats-Context
+  *)
 
   type perf_context
   type counter
@@ -314,6 +333,8 @@ module Perf_context : sig
   end
 
   val create : unit -> perf_context
+
+
   val reset : perf_context -> unit
   val metric : perf_context -> counter -> int
 
