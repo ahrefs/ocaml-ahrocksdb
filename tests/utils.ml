@@ -9,7 +9,7 @@ let with_tmp_dir fn =
   in
   match result with
   | Ok result -> result
-  | Error _ -> Error "Bos err: OS.Dir.with_tmp"
+  | Error _ -> Error (`Msg "Bos err: OS.Dir.with_tmp")
 
 let get_random_kvalues n =
   let rng = Cryptokit.Random.device_rng "/dev/urandom" in

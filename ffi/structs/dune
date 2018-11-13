@@ -1,0 +1,18 @@
+(rule
+  (targets structs_stubgen.c)
+  (deps driver.exe)
+  (action (with-stdout-to %{targets} (run %{deps} -c)))
+)
+
+(executable
+ (name driver)
+ (modules driver)
+ (libraries rocksdb_types ctypes.stubs ctypes)
+)
+
+(library
+ (name rocksdb_types)
+ (public_name rocksdb.types)
+ (modules rocksdb_types)
+ (libraries ctypes.stubs ctypes)
+)

@@ -13,6 +13,14 @@ let bool_to_int =
     ~write:(function true -> 1 | false -> 0)
     int
 
+let int_of_compression = function
+  | `No_compression -> 0
+  | `Snappy -> 1
+  | `Zlib -> 2
+  | `Bz2 -> 3
+  | `Lz4 -> 4
+  | `Lz4hc -> 5
+
 let compression_view =
   let read = function
     | 0 -> `No_compression
@@ -23,14 +31,7 @@ let compression_view =
     | 5 -> `Lz4hc
     | other -> invalid_arg @@ Printf.sprintf "read_compression_view: invalid compression type: %d" other
   in
-  let write = function
-    | `No_compression -> 0
-    | `Snappy -> 1
-    | `Zlib -> 2
-    | `Bz2 -> 3
-    | `Lz4 -> 4
-    | `Lz4hc -> 5
-  in
+  let write = int_of_compression in
   Ctypes.view ~read ~write Ctypes.int
 
 let int_to_uint64 =

@@ -1,5 +1,5 @@
-type error = string
-let pp_error ppf x = Fmt.string ppf x
+type error = [ `Msg of string ]
+let pp_error ppf = function `Msg x -> Fmt.string ppf x
 let error = Alcotest.testable pp_error (=)
 let t = Alcotest.(result unit error)
 
