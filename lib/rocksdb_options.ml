@@ -80,6 +80,7 @@ type config = {
     cache_index_and_filter_blocks : bool;
     block_cache : Cache.t option;
     trace_perf : bool;
+    bulk_load : bool;
   }
 
 let of_config {
@@ -104,6 +105,7 @@ let of_config {
     filter_policy;
     block_cache;
     cache_index_and_filter_blocks;
+    bulk_load;
     trace_perf=_;
   } =
 
@@ -152,6 +154,9 @@ let of_config {
     set_compression_per_level options (Ctypes.bigarray_start Ctypes.array1 ba) len
   end;
 
+  if bulk_load then
+    prepare_for_bulk_load options;
+
   options
 
 let default = {
@@ -176,6 +181,7 @@ let default = {
     filter_policy = None;
     cache_index_and_filter_blocks = false;
     block_cache = None;
+    bulk_load = false;
     trace_perf = false;
 }
 

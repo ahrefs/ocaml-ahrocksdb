@@ -134,6 +134,7 @@ module Options : sig
     cache_index_and_filter_blocks : bool;
     block_cache : Cache.t option;
     trace_perf : bool;
+    bulk_load : bool;
   }
 
   (** default configuration, only compression is set to `Snappy, everything else is None (RocksDB defaults will apply) *)
