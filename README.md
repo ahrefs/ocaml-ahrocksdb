@@ -1,8 +1,8 @@
 # ocaml-rocksdb -- a binding to RocksDB
 
-This is a binding to Facebook's RocksDB, based on their official C APIs.
+This is a binding to Facebook's RocksDB.
 
-This library is based on [orocksdb](https://github.com/domsj/orocksdb).
+Early prototype of this library based on [orocksdb](https://github.com/domsj/orocksdb), we decided to rewrite our own binding to make use of Ctypes's stubs generators instead of the dynamic mode used in orocksdb.
 
 It is currently based and was tested against RocksDB 5.14fb, and should work with newer versions of this library.
 
