@@ -12,7 +12,7 @@
 
 (library
  (name rocksdb_types)
- (public_name rocksdb.types)
+ (public_name ahrocksdb.types)
  (modules rocksdb_types)
  (libraries ctypes.stubs ctypes)
 )

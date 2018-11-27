@@ -11,7 +11,7 @@
 
 (library
  (name rocksdb_ffi)
- (public_name rocksdb.ffi)
+ (public_name ahrocksdb.ffi)
  (modules g m)
  (c_names rocksdb_stubs)
  (flags (:standard -w -9-27-32-34))
