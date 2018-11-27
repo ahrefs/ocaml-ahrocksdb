@@ -1,4 +1,4 @@
-# ocaml-rocksdb -- a binding to RocksDB
+# ocaml-ahrocksdb -- a binding to RocksDB
 
 This is a binding to Facebook's RocksDB.
 
