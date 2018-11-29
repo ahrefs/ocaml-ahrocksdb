@@ -2,7 +2,7 @@ opam-version: "1.2"
 maintainer: "Enguerrand Decorne <enguerrand.decorne@ahrefs.com>"
 authors: ["Enguerrand Decorne <enguerrand.decorne@ahrefs.com>"]
 homepage: "https://github.com/ahrefs/ocaml-ahrocksdb"
-doc: "https://github.com/ahrefs/ocaml-ahrocksdb"
+doc: "https://ahrefs.github.io/ocaml-ahrocksdb/"
 license: "MIT"
 dev-repo: "https://github.com/ahrefs/ocaml-ahrocksdb.git"
 bug-reports: "https://github.com/ahrefs/ocaml-ahrocksdb/issues"
