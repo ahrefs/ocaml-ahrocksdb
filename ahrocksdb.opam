@@ -6,7 +6,7 @@ doc: "https://github.com/ahrefs/ocaml-ahrocksdb"
 license: "MIT"
 dev-repo: "https://github.com/ahrefs/ocaml-ahrocksdb.git"
 bug-reports: "https://github.com/ahrefs/ocaml-ahrocksdb/issues"
-available: [ ocaml-version >= "4.03.0"]
+available: [ ocaml-version >= "4.06.0"]
 depends: [
   "dune" {build}
   "ctypes" {>="0.12.0"}
