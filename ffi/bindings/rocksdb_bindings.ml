@@ -201,17 +201,6 @@ module M(F: Cstubs.FOREIGN) = struct
       let set_sync =
         foreign "rocksdb_writeoptions_set_sync" C.(t @-> bool_to_uchar @-> returning void)
 
-      (* not in rocksdb-4.5fb: disabled  *)
-
-      (* let set_ignore_missing_column_families = *)
-      (*   foreign "rocksdb_writeoptions_set_ignore_missing_column_families" C.(t @-> Views.bool_to_uchar @-> returning void) *)
-
-      (* let set_no_slowdown = *)
-      (*   foreign "rocksdb_writeoptions_set_no_slowdown" C.(t @-> Views.bool_to_uchar @-> returning void) *)
-
-      (* let set_low_pri = *)
-      (*   foreign "rocksdb_writeoptions_set_low_pri" C.(t @-> Views.bool_to_uchar @-> returning void) *)
-
       let disable_WAL =
         foreign "rocksdb_writeoptions_disable_WAL" C.(t @-> Views.bool_to_int @-> returning void)
 
