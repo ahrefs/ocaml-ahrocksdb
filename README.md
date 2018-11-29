@@ -13,5 +13,5 @@ While we do not plan big changes in what is already implemented, we do not guara
 Some APIs could definitely use improvements (moving the current configuration system to a builder-like pattern),
 and some breakage may or may-not happen.
 
-Pull requests to improve any parts of the library are however welcome, wether they are related to
+Pull requests to improve any parts of the library are however welcome, whether they are related to
 tests, binding coverage, or API improvements, feel free to open an issue to discuss changes.
