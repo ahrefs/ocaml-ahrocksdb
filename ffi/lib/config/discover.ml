@@ -1,7 +1,7 @@
 open Printf
 open Base
 
-let minimum_rocks_version = "5.8"
+let minimum_rocks_version = "5.14"
 
 module C = Configurator.V1
 
