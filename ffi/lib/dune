@@ -17,7 +17,7 @@
  (flags (:standard -w -9-27-32-34))
  (c_library_flags (:include c_library_flags.sexp))
  (c_flags (:include c_flags.sexp) -Wno-discarded-qualifiers)
- (libraries rocksdb.bindings ctypes.stubs ctypes)
+ (libraries ahrocksdb.bindings ctypes.stubs ctypes)
 )
 
 (rule
