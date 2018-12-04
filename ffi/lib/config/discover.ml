@@ -1,5 +1,4 @@
 open Printf
-open Base
 
 let minimum_rocks_version = "5.14"
 
@@ -27,13 +26,13 @@ int main() {
 |}
 in
 
-let c_flag = List.find known_paths ~f:(fun c_flag -> C.c_test c ~c_flags:["-I" ^ c_flag] ~link_flags include_test) in
+let c_flag = List.find_opt (fun c_flag -> C.c_test c ~c_flags:["-I" ^ c_flag] ~link_flags include_test) known_paths in
 
 match c_flag with
 | None ->
 
    eprintf "failed to find an include path for RocksDB: are development headers installed on your system ?\n";
-   eprintf "tested paths: %s\n" (String.concat ~sep:" " known_paths);
+   eprintf "tested paths: %s\n" (String.concat " " known_paths);
    C.die "discover error"
 
 | Some c_flag -> try
@@ -41,10 +40,10 @@ match c_flag with
    let version_path = c_flag ^ "/version.h" in
    let assoc = C.C_define.import c ~includes:[ version_path ] ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
    let expect_int name =
-     match List.Assoc.find assoc ~equal:String.equal name with
+     match List.assoc_opt name assoc with
      | Some (Int i) -> i
      | Some _ -> failwith (sprintf "%s is not an int in %s" name version_path)
-     | None   -> failwith (sprintf "could not find %s in %s" name version_path)
+     | None -> failwith (sprintf "could not find %s in %s" name version_path)
    in
 
    let major = expect_int "ROCKSDB_MAJOR" in
