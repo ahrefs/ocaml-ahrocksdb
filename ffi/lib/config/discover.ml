@@ -49,7 +49,7 @@ match c_flag with
    let major = expect_int "ROCKSDB_MAJOR" in
    let minor = expect_int "ROCKSDB_MINOR" in
    let version = sprintf "%d.%d" major minor in
-   if (String.compare version minimum_rocks_version) > 0 then failwith (sprintf "installed RocksDB installation is too old: found %s, expected %s minimum" version minimum_rocks_version);
+   if (String.compare minimum_rocks_version version) > 0 then failwith (sprintf "installed RocksDB installation is too old: found %s, expected %s minimum" version minimum_rocks_version);
 
    C.Flags.write_sexp "c_flags.sexp"         ["-I" ^ c_flag];
    C.Flags.write_sexp "c_library_flags.sexp" link_flags;
