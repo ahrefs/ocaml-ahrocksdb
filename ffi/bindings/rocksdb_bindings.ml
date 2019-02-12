@@ -141,6 +141,9 @@ module M(F: Cstubs.FOREIGN) = struct
     let set_max_bytes_for_level_base =
       foreign "rocksdb_options_set_max_bytes_for_level_base" C.(options @-> int_to_size_t @-> returning void)
 
+    let set_max_bytes_for_level_multiplier =
+      foreign "rocksdb_options_set_max_bytes_for_level_multiplier" C.(options @-> double @-> returning void)
+
     let set_write_buffer_size =
       foreign "rocksdb_options_set_write_buffer_size" C.(options @-> int_to_size_t @-> returning void)
 
