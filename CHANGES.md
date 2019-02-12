@@ -1,3 +1,7 @@
+## 0.3
+
+- Add max_bytes_for_level_base and max_bytes_for_level_multiplier options.
+
 ## 0.2.1
 
 Do not depend on base anymore.
