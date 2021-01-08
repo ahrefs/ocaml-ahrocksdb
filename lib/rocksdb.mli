@@ -128,6 +128,7 @@ module Options : sig
     min_write_buffer_number_to_merge : int option;
     target_base_file_size : int option;
     max_bytes_for_level_base : int option;
+    max_bytes_for_level_multiplier : float option;
     table_format : Tables.format option;
     max_open_files : int option;
     create_if_missing : bool;

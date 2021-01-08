@@ -74,6 +74,7 @@ type config = {
     min_write_buffer_number_to_merge : int option;
     target_base_file_size : int option;
     max_bytes_for_level_base : int option;
+    max_bytes_for_level_multiplier : float option;
     table_format : Tables.format option;
     max_open_files : int option;
     create_if_missing : bool;
@@ -98,6 +99,7 @@ let of_config {
     num_levels;
     target_base_file_size;
     max_bytes_for_level_base;
+    max_bytes_for_level_multiplier;
     table_format;
     write_buffer_size;
     max_write_buffer_number;
@@ -129,6 +131,7 @@ let of_config {
   stop_writes_trigger              >>= set_level0_stop_writes_trigger options;
   target_base_file_size            >>= set_target_file_size_base options;
   max_bytes_for_level_base         >>= set_max_bytes_for_level_base options;
+  max_bytes_for_level_multiplier   >>= set_max_bytes_for_level_multiplier options;
   num_levels                       >>= set_num_levels options;
   write_buffer_size                >>= set_write_buffer_size options;
   max_write_buffer_number          >>= set_max_write_buffer_number options;
@@ -176,6 +179,7 @@ let default = {
     num_levels = None;
     target_base_file_size = None;
     max_bytes_for_level_base = None;
+    max_bytes_for_level_multiplier = None;
     table_format = None;
     write_buffer_size = None;
     max_write_buffer_number = None;
