@@ -57,10 +57,21 @@ let create () =
   Gc.finalise destroy t;
   t
 
+type compression = [
+  | `Bz2
+  | `Lz4
+  | `Lz4hc
+  | `No_compression
+  | `Snappy
+  | `Xpress
+  | `Zlib
+  | `Zstd
+]
+
 type config = {
     parallelism_level : int option;
-    base_compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ];
-    compression_by_level : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ] list;
+    base_compression : compression;
+    compression_by_level : compression list;
     optimize_filters_for_hits: bool option;
     disable_compaction : bool;
     max_flush_processes : int option;

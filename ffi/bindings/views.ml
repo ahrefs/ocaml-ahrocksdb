@@ -20,6 +20,8 @@ let int_of_compression = function
   | `Bz2 -> 3
   | `Lz4 -> 4
   | `Lz4hc -> 5
+  | `Xpress -> 6
+  | `Zstd -> 7
 
 let compression_view =
   let read = function
@@ -29,6 +31,8 @@ let compression_view =
     | 3 -> `Bz2
     | 4 -> `Lz4
     | 5 -> `Lz4hc
+    | 6 -> `Xpress
+    | 7 -> `Zstd
     | other -> invalid_arg @@ Printf.sprintf "read_compression_view: invalid compression type: %d" other
   in
   let write = int_of_compression in

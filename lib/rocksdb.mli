@@ -110,11 +110,23 @@ module Options : sig
 
   end
 
+  (** Compression algorithms supported by RocksDB *)
+  type compression = [
+    | `Bz2
+    | `Lz4
+    | `Lz4hc
+    | `No_compression
+    | `Snappy
+    | `Xpress
+    | `Zlib
+    | `Zstd
+  ]
+
   (** RocksDB main configuration record *)
   type config = {
     parallelism_level : int option; (** Number of background processes used by RocksDB *)
-    base_compression : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ]; (** Compression algorithm used to compact data at base level*)
-    compression_by_level : [ `Bz2 | `Lz4 | `Lz4hc | `No_compression | `Snappy | `Zlib ] list; (** Compression algorithm used to compact data in order for each level*)
+    base_compression : compression; (** Compression algorithm used to compact data at base level*)
+    compression_by_level : compression list; (** Compression algorithm used to compact data in order for each level*)
     optimize_filters_for_hits: bool option;
     disable_compaction : bool; (** Disable compaction: data will not be compressed, but manual compaction can still be issued *)
     max_flush_processes : int option; (** Number of background workers dedicated to flush *)
