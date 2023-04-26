@@ -19,7 +19,7 @@
 (library
  (name rocksdb_bindings)
  (public_name ahrocksdb.bindings)
- (flags (:standard -w no-unused-parameter))
+ (flags (:standard -w -unused-var-strict))
  (synopsis "Ctypes bindings that describe the librocksdb FFI")
  (modules rocksdb_bindings views t)
  (libraries rocksdb_types ctypes.stubs ctypes))

@@ -1,5 +1,6 @@
 (library
  (name rocksdb)
  (public_name ahrocksdb)
+ (flags :standard -w -unerasable-optional-argument)
  (libraries ahrocksdb.ffi astring rresult)
 )
