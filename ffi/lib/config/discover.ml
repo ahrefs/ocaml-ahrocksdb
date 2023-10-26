@@ -26,7 +26,7 @@ int main() {
 |}
 in
 
-let c_flag = List.find_opt (fun c_flag -> C.c_test c ~c_flags:["-I" ^ c_flag] ~link_flags include_test) known_paths in
+let c_flag = List.find_opt (fun c_flag -> C.c_test c ~c_flags:["-I" ^ c_flag; "-x"; "c++"] ~link_flags include_test) known_paths in
 
 match c_flag with
 | None ->
