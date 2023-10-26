@@ -26,6 +26,7 @@ int main() {
 |}
 in
 
+(* version.h includes <string> (but the C api headers don't so c++ is not needed to actually compile the bindings, only to check the version) *)
 let c_flag = List.find_opt (fun c_flag -> C.c_test c ~c_flags:["-I" ^ c_flag; "-x"; "c++"] ~link_flags include_test) known_paths in
 
 match c_flag with
@@ -38,7 +39,10 @@ match c_flag with
 | Some c_flag -> try
 
    let version_path = c_flag ^ "/version.h" in
-   let assoc = C.C_define.import c ~includes:[ version_path ] ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
+   (* too much configurator magic
+      somehow gcc 12 with -O2 compiles the constant unused strings away and so the object file pattern search fails, printing would have just worked
+    *)
+   let assoc = C.C_define.import c ~c_flags:["-O0"; "-x"; "c++"] ~includes:[ version_path ] ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
    let expect_int name =
      match List.assoc_opt name assoc with
      | Some (Int i) -> i
