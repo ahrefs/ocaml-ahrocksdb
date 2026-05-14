@@ -1,3 +1,8 @@
+## 0.3.2
+
+- fix build with newer rocksdb versions
+- support xpress and zstd compression
+
 ## 0.3.1
 
 - add explicit dependency on dune-configurator
