@@ -1,0 +1,16 @@
+# Project-local override for RocksDB static linking.
+# The upstream rocksdb.pc typically omits Libs.private, so pkg-config
+# --static only returns -lrocksdb.  This file is prepended to
+# PKG_CONFIG_PATH when ROCKSDB_LINK_MODE=static so that the full set of
+# transitive static dependencies is emitted.
+#
+# Adjust Libs.private if your RocksDB was built without a particular
+# compression backend (e.g. remove -lsnappy if RocksDB was built
+# without Snappy support).
+
+Name: rocksdb
+Description: A persistent key-value store for fast storage environments (static override)
+Version: 0
+Libs: -lrocksdb
+Libs.private: -lz -lsnappy -llz4 -lbz2 -lzstd -ldl -lpthread
+Cflags:

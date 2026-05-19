@@ -13,14 +13,13 @@
  (name rocksdb_ffi)
  (public_name ahrocksdb.ffi)
  (modules g m)
- (c_names rocksdb_stubs)
+ (foreign_stubs (language c) (names rocksdb_stubs) (flags (:include c_flags.sexp) -Wno-discarded-qualifiers))
  (flags (:standard -w -9-27-32-34))
  (c_library_flags (:include c_library_flags.sexp))
- (c_flags (:include c_flags.sexp) -Wno-discarded-qualifiers)
  (libraries ahrocksdb.bindings ctypes.stubs ctypes)
 )
 
 (rule
  (targets c_flags.sexp c_library_flags.sexp c_flags.txt c_library_flags.txt)
- (deps    (:discover config/discover.exe))
+ (deps    (:discover config/discover.exe) (env_var ROCKSDB_LINK_MODE))
  (action  (run %{discover})))

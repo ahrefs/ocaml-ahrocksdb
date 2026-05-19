@@ -47,9 +47,28 @@ let known_paths = [
   "/usr/include/rocksdb";
 ] in
 
-(* PKG_CONFIG_ARGN is read by Pkg_config.get and prepended to every query;
-   set it before the call so --static propagates to --libs and --cflags *)
-if static then Unix.putenv "PKG_CONFIG_ARGN" "--static";
+(* When building statically, prepend our local pkgconfig/ override directory
+   so that it takes precedence over the system rocksdb.pc, which typically
+   omits Libs.private (the transitive static deps).
+   INSIDE_DUNE is set by dune to the context build directory (e.g.
+   /abs/project/_build/default); two dirname steps reach the workspace root. *)
+if static then begin
+  let workspace_root =
+    match Sys.getenv_opt "INSIDE_DUNE" with
+    | Some build_dir -> Filename.dirname (Filename.dirname build_dir)
+    | None -> Sys.getcwd ()
+  in
+  let local_pc_dir = Filename.concat workspace_root "pkgconfig" in
+  if Sys.file_exists local_pc_dir then begin
+    let existing = match Sys.getenv_opt "PKG_CONFIG_PATH" with
+      | Some s -> ":" ^ s
+      | None -> ""
+    in
+    Unix.putenv "PKG_CONFIG_PATH" (local_pc_dir ^ existing)
+  end;
+  (* PKG_CONFIG_ARGN is read by Pkg_config.get and prepended to every query *)
+  Unix.putenv "PKG_CONFIG_ARGN" "--static"
+end;
 
 (* Try pkg-config first; fall back to manual path search *)
 let c_flags, link_flags =
