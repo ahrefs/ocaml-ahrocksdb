@@ -1,3 +1,2 @@
-(lang dune 2.9)
+(lang dune 3.15)
 (name ahrocksdb)
-(use_standard_c_and_cxx_flags false)

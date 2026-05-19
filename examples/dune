@@ -1,14 +1,9 @@
 (executable
  (name hello_rocksdb)
-  (link_flags
+ (enabled_if (= %{env:ROCKSDB_LINK_MODE=} static))
+ (link_flags
   -cc
   "%{cc} -Wl,-Bstatic"
-  ; bz2 and lz4 for rocksdb (it doesn't have correct pkg-config for static libs
-  ; and anyway ahrocksdb doesn't use pkg-config
-  -cclib
-  -lbz2
-  -cclib
-  -llz4
   -cclib
   -Wl,-Bdynamic)
  (libraries ahrocksdb))

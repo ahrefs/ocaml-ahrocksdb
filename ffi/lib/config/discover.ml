@@ -47,26 +47,56 @@ let known_paths = [
   "/usr/include/rocksdb";
 ] in
 
-(* When building statically, prepend our local pkgconfig/ override directory
-   so that it takes precedence over the system rocksdb.pc, which typically
-   omits Libs.private (the transitive static deps).
-   INSIDE_DUNE is set by dune to the context build directory (e.g.
-   /abs/project/_build/default); two dirname steps reach the workspace root. *)
+(* When building statically, generate a rocksdb.pc in the build output dir
+   with the actual installed version and only the compression libraries
+   present on this system, then point PKG_CONFIG_PATH at that dir. *)
 if static then begin
-  let workspace_root =
-    match Sys.getenv_opt "INSIDE_DUNE" with
-    | Some build_dir -> Filename.dirname (Filename.dirname build_dir)
-    | None -> Sys.getcwd ()
+  let include_dir =
+    match List.find_opt (fun p -> Sys.file_exists (p ^ "/version.h")) known_paths with
+    | Some dir -> dir
+    | None ->
+      eprintf "failed to locate rocksdb/version.h; are dev headers installed?\n";
+      C.die "discover error"
   in
-  let local_pc_dir = Filename.concat workspace_root "pkgconfig" in
-  if Sys.file_exists local_pc_dir then begin
-    let existing = match Sys.getenv_opt "PKG_CONFIG_PATH" with
-      | Some s -> ":" ^ s
-      | None -> ""
-    in
-    Unix.putenv "PKG_CONFIG_PATH" (local_pc_dir ^ existing)
-  end;
-  (* PKG_CONFIG_ARGN is read by Pkg_config.get and prepended to every query *)
+  let major, minor =
+    (try
+      let version_path = include_dir ^ "/version.h" in
+      let assoc = C.C_define.import c
+          ~c_flags:["-O0"; "-x"; "c++"] ~includes:[version_path]
+          ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
+      let get_int name = match List.assoc_opt name assoc with
+        | Some (Int i) -> i
+        | Some _ -> failwith (sprintf "%s is not an int" name)
+        | None -> failwith (sprintf "could not find %s" name)
+      in
+      (get_int "ROCKSDB_MAJOR", get_int "ROCKSDB_MINOR")
+    with Failure s -> C.die "failure: %s" s)
+  in
+  let std_lib_dirs = [
+    "/usr/lib"; "/usr/lib/x86_64-linux-gnu"; "/usr/lib/aarch64-linux-gnu";
+    "/usr/local/lib"; "/usr/lib64";
+  ] in
+  let has_static_lib name =
+    List.exists (fun dir ->
+      Sys.file_exists (Filename.concat dir ("lib" ^ name ^ ".a"))
+    ) std_lib_dirs
+  in
+  let libs_private =
+    List.filter_map (fun name ->
+      if has_static_lib name then Some ("-l" ^ name) else None
+    ) ["z"; "snappy"; "lz4"; "bz2"; "zstd"]
+    @ ["-ldl"; "-lpthread"; "-lstdc++"]
+  in
+  let pc_dir = Sys.getcwd () in
+  let oc = open_out (Filename.concat pc_dir "rocksdb.pc") in
+  fprintf oc "Name: rocksdb\nDescription: RocksDB static override\nVersion: %d.%d\nLibs: -lrocksdb\nLibs.private: %s\nCflags:\n"
+    major minor (String.concat " " libs_private);
+  close_out oc;
+  let existing = match Sys.getenv_opt "PKG_CONFIG_PATH" with
+    | Some s -> ":" ^ s
+    | None -> ""
+  in
+  Unix.putenv "PKG_CONFIG_PATH" (pc_dir ^ existing);
   Unix.putenv "PKG_CONFIG_ARGN" "--static"
 end;
 
@@ -137,7 +167,5 @@ C.Flags.write_sexp  "c_flags.sexp"          c_flags;
 C.Flags.write_sexp  "c_library_flags.sexp"  link_flags;
 C.Flags.write_lines "c_flags.txt"           c_flags;
 C.Flags.write_lines "c_library_flags.txt"   link_flags;
-C.Flags.write_sexp  "exe_link_flags.sexp"   [];
-C.Flags.write_lines "exe_link_flags.txt"    []
 
 end
