@@ -12,5 +12,5 @@ Name: rocksdb
 Description: A persistent key-value store for fast storage environments (static override)
 Version: 0
 Libs: -lrocksdb
-Libs.private: -lz -lsnappy -llz4 -lbz2 -lzstd -ldl -lpthread
+Libs.private: -lz -lsnappy -llz4 -lbz2 -lzstd -ldl -lpthread -lstdc++
 Cflags:

@@ -128,9 +128,16 @@ in
       major minor minimum_rocks_major minimum_rocks_minor)
 with Failure s -> C.die "failure: %s" s);
 
-C.Flags.write_sexp  "c_flags.sexp"         c_flags;
-C.Flags.write_sexp  "c_library_flags.sexp" link_flags;
-C.Flags.write_lines "c_flags.txt"          c_flags;
-C.Flags.write_lines "c_library_flags.txt"  link_flags
+(* c_library_flags carries all rocksdb deps in both modes.  The DLL build
+   resolves -lrocksdb to librocksdb.so (no -Wl,-Bstatic in effect there),
+   so no non-PIC .a is linked into a shared object and mold is satisfied.
+   Executables that need static linking supply -Wl,-Bstatic themselves via
+   -cc in their own link_flags; that flag only affects their link step. *)
+C.Flags.write_sexp  "c_flags.sexp"          c_flags;
+C.Flags.write_sexp  "c_library_flags.sexp"  link_flags;
+C.Flags.write_lines "c_flags.txt"           c_flags;
+C.Flags.write_lines "c_library_flags.txt"   link_flags;
+C.Flags.write_sexp  "exe_link_flags.sexp"   [];
+C.Flags.write_lines "exe_link_flags.txt"    []
 
 end
