@@ -5,12 +5,22 @@ let minimum_rocks_major, minimum_rocks_minor = 5, 14
 module C = Configurator.V1
 
 let () = C.main ~name:"librocksdb" begin fun c ->
-let link_flags = ["-lrocksdb"] in
 
-let known_paths = [
-  "/usr/local/include/rocksdb";
-  "/usr/include/rocksdb";
-] in
+(* Given a list of -I flags and known fallback paths, return the directory
+   that directly contains version.h (the rocksdb include directory). *)
+let find_include_dir c_flags known_paths =
+  let from_flags = List.filter_map (fun f ->
+    if String.length f > 2 && String.sub f 0 2 = "-I" then begin
+      let dir = String.sub f 2 (String.length f - 2) in
+      if Sys.file_exists (dir ^ "/version.h") then Some dir
+      else if Sys.file_exists (dir ^ "/rocksdb/version.h") then Some (dir ^ "/rocksdb")
+      else None
+    end else None) c_flags
+  in
+  match from_flags with
+  | dir :: _ -> Some dir
+  | [] -> List.find_opt (fun p -> Sys.file_exists (p ^ "/version.h")) known_paths
+in
 
 let include_test = {|
 
@@ -26,40 +36,82 @@ int main() {
 |}
 in
 
-(* version.h includes <string> (but the C api headers don't so c++ is not needed to actually compile the bindings, only to check the version) *)
-let c_flag = List.find_opt (fun c_flag -> C.c_test c ~c_flags:["-I" ^ c_flag; "-x"; "c++"] ~link_flags include_test) known_paths in
 
-match c_flag with
-| None ->
+let static = match Sys.getenv_opt "ROCKSDB_LINK_MODE" with
+  | Some "static" -> true
+  | _ -> false
+in
 
-   eprintf "failed to find an include path for RocksDB: are development headers installed on your system ?\n";
-   eprintf "tested paths: %s\n" (String.concat " " known_paths);
-   C.die "discover error"
+let known_paths = [
+  "/usr/local/include/rocksdb";
+  "/usr/include/rocksdb";
+] in
 
-| Some c_flag -> try
+(* PKG_CONFIG_ARGN is read by Pkg_config.get and prepended to every query;
+   set it before the call so --static propagates to --libs and --cflags *)
+if static then Unix.putenv "PKG_CONFIG_ARGN" "--static";
 
-   let version_path = c_flag ^ "/version.h" in
-   (* too much configurator magic
-      somehow gcc 12 with -O2 compiles the constant unused strings away and so the object file pattern search fails, printing would have just worked
-    *)
-   let assoc = C.C_define.import c ~c_flags:["-O0"; "-x"; "c++"] ~includes:[ version_path ] ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
-   let expect_int name =
-     match List.assoc_opt name assoc with
-     | Some (Int i) -> i
-     | Some _ -> failwith (sprintf "%s is not an int in %s" name version_path)
-     | None -> failwith (sprintf "could not find %s in %s" name version_path)
-   in
+(* Try pkg-config first; fall back to manual path search *)
+let c_flags, link_flags =
+  let pkg_result =
+    match C.Pkg_config.get c with
+    | None -> None
+    | Some pkg -> C.Pkg_config.query pkg ~package:"rocksdb"
+  in
+  match pkg_result with
+  | Some { C.Pkg_config.libs; cflags } -> (cflags, libs)
+  | None ->
+    let path = List.find_opt (fun p ->
+      C.c_test c ~c_flags:["-I" ^ p; "-x"; "c++"] ~link_flags:["-lrocksdb"] include_test
+    ) known_paths in
+    begin match path with
+    | None ->
+      eprintf "failed to find an include path for RocksDB: are development headers installed?\n";
+      eprintf "tested paths: %s\n" (String.concat " " known_paths);
+      C.die "discover error"
+    | Some path -> (["-I" ^ path], ["-lrocksdb"])
+    end
+in
 
-   let major = expect_int "ROCKSDB_MAJOR" in
-   let minor = expect_int "ROCKSDB_MINOR" in
-   if (major, minor) < (minimum_rocks_major, minimum_rocks_minor) then
-     failwith (sprintf "installed RocksDB installation is too old: found %d.%d, expected %d.%d minimum" major minor minimum_rocks_major minimum_rocks_minor);
+(* Locate the directory containing version.h for the version check *)
+let include_dir =
+  match find_include_dir c_flags known_paths with
+  | Some dir -> dir
+  | None ->
+    eprintf "failed to locate rocksdb/version.h\n";
+    C.die "discover error"
+in
 
-   C.Flags.write_sexp "c_flags.sexp"         ["-I" ^ c_flag];
-   C.Flags.write_sexp "c_library_flags.sexp" link_flags;
-   C.Flags.write_lines "c_flags.txt"         ["-I" ^ c_flag];
-   C.Flags.write_lines "c_library_flags.txt" link_flags
+(* pkg-config may omit -I when the path is a default system include dir,
+   but the C stubs use #include <c.h> (not <rocksdb/c.h>) so the rocksdb
+   directory itself must be in the include path *)
+let include_flag = "-I" ^ include_dir in
+let c_flags =
+  if List.mem include_flag c_flags then c_flags
+  else include_flag :: c_flags
+in
 
-  with Failure s -> C.die "failure: %s" s
+(* version.h includes <string> so C++ is required to parse it *)
+(try
+  let version_path = include_dir ^ "/version.h" in
+  let assoc = C.C_define.import c ~c_flags:["-O0"; "-x"; "c++"] ~includes:[version_path]
+                ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
+  let expect_int name =
+    match List.assoc_opt name assoc with
+    | Some (Int i) -> i
+    | Some _ -> failwith (sprintf "%s is not an int in %s" name version_path)
+    | None -> failwith (sprintf "could not find %s in %s" name version_path)
+  in
+  let major = expect_int "ROCKSDB_MAJOR" in
+  let minor = expect_int "ROCKSDB_MINOR" in
+  if (major, minor) < (minimum_rocks_major, minimum_rocks_minor) then
+    failwith (sprintf "RocksDB too old: found %d.%d, expected >= %d.%d"
+      major minor minimum_rocks_major minimum_rocks_minor)
+with Failure s -> C.die "failure: %s" s);
+
+C.Flags.write_sexp  "c_flags.sexp"         c_flags;
+C.Flags.write_sexp  "c_library_flags.sexp" link_flags;
+C.Flags.write_lines "c_flags.txt"          c_flags;
+C.Flags.write_lines "c_library_flags.txt"  link_flags
 
 end
