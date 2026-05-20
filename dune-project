@@ -1,2 +1,2 @@
-(lang dune 3.15)
+(lang dune 2.0)
 (name ahrocksdb)
