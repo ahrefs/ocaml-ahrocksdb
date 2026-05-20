@@ -1,6 +1,5 @@
 (executable
  (name hello_rocksdb)
- (enabled_if (= %{env:ROCKSDB_LINK_MODE=} static))
  (link_flags
   -cc
   "%{cc} -Wl,-Bstatic"

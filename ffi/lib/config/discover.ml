@@ -6,22 +6,6 @@ module C = Configurator.V1
 
 let () = C.main ~name:"librocksdb" begin fun c ->
 
-(* Given a list of -I flags and known fallback paths, return the directory
-   that directly contains version.h (the rocksdb include directory). *)
-let find_include_dir c_flags known_paths =
-  let from_flags = List.filter_map (fun f ->
-    if String.length f > 2 && String.sub f 0 2 = "-I" then begin
-      let dir = String.sub f 2 (String.length f - 2) in
-      if Sys.file_exists (dir ^ "/version.h") then Some dir
-      else if Sys.file_exists (dir ^ "/rocksdb/version.h") then Some (dir ^ "/rocksdb")
-      else None
-    end else None) c_flags
-  in
-  match from_flags with
-  | dir :: _ -> Some dir
-  | [] -> List.find_opt (fun p -> Sys.file_exists (p ^ "/version.h")) known_paths
-in
-
 let include_test = {|
 
 #include <c.h>
@@ -37,11 +21,6 @@ int main() {
 in
 
 
-let static = match Sys.getenv_opt "ROCKSDB_LINK_MODE" with
-  | Some "static" -> true
-  | _ -> false
-in
-
 let known_paths = [
   "/usr/local/include/rocksdb";
   "/usr/include/rocksdb";
@@ -50,55 +29,53 @@ let known_paths = [
 (* When building statically, generate a rocksdb.pc in the build output dir
    with the actual installed version and only the compression libraries
    present on this system, then point PKG_CONFIG_PATH at that dir. *)
-if static then begin
-  let include_dir =
-    match List.find_opt (fun p -> Sys.file_exists (p ^ "/version.h")) known_paths with
-    | Some dir -> dir
-    | None ->
-      eprintf "failed to locate rocksdb/version.h; are dev headers installed?\n";
-      C.die "discover error"
-  in
-  let major, minor =
-    (try
-      let version_path = include_dir ^ "/version.h" in
-      let assoc = C.C_define.import c
-          ~c_flags:["-O0"; "-x"; "c++"] ~includes:[version_path]
-          ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
-      let get_int name = match List.assoc_opt name assoc with
-        | Some (Int i) -> i
-        | Some _ -> failwith (sprintf "%s is not an int" name)
-        | None -> failwith (sprintf "could not find %s" name)
-      in
-      (get_int "ROCKSDB_MAJOR", get_int "ROCKSDB_MINOR")
-    with Failure s -> C.die "failure: %s" s)
-  in
-  let std_lib_dirs = [
-    "/usr/lib"; "/usr/lib/x86_64-linux-gnu"; "/usr/lib/aarch64-linux-gnu";
-    "/usr/local/lib"; "/usr/lib64";
-  ] in
-  let has_static_lib name =
-    List.exists (fun dir ->
-      Sys.file_exists (Filename.concat dir ("lib" ^ name ^ ".a"))
-    ) std_lib_dirs
-  in
-  let libs_private =
-    List.filter_map (fun name ->
-      if has_static_lib name then Some ("-l" ^ name) else None
-    ) ["z"; "snappy"; "lz4"; "bz2"; "zstd"]
-    @ ["-ldl"; "-lpthread"; "-lstdc++"]
-  in
-  let pc_dir = Sys.getcwd () in
-  let oc = open_out (Filename.concat pc_dir "rocksdb.pc") in
-  fprintf oc "Name: rocksdb\nDescription: RocksDB static override\nVersion: %d.%d\nLibs: -lrocksdb\nLibs.private: %s\nCflags:\n"
-    major minor (String.concat " " libs_private);
-  close_out oc;
-  let existing = match Sys.getenv_opt "PKG_CONFIG_PATH" with
-    | Some s -> ":" ^ s
-    | None -> ""
-  in
-  Unix.putenv "PKG_CONFIG_PATH" (pc_dir ^ existing);
-  Unix.putenv "PKG_CONFIG_ARGN" "--static"
-end;
+let include_dir =
+  match List.find_opt (fun p -> Sys.file_exists (p ^ "/version.h")) known_paths with
+  | Some dir -> dir
+  | None ->
+    eprintf "failed to locate rocksdb/version.h; are dev headers installed?\n";
+    C.die "discover error"
+in
+let major, minor =
+  (try
+    let version_path = include_dir ^ "/version.h" in
+    let assoc = C.C_define.import c
+        ~c_flags:["-O0"; "-x"; "c++"] ~includes:[version_path]
+        ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
+    let get_int name = match List.assoc_opt name assoc with
+      | Some (Int i) -> i
+      | Some _ -> failwith (sprintf "%s is not an int" name)
+      | None -> failwith (sprintf "could not find %s" name)
+    in
+    (get_int "ROCKSDB_MAJOR", get_int "ROCKSDB_MINOR")
+  with Failure s -> C.die "failure: %s" s)
+in
+let std_lib_dirs = [
+  "/usr/lib"; "/usr/lib/x86_64-linux-gnu"; "/usr/lib/aarch64-linux-gnu";
+  "/usr/local/lib"; "/usr/lib64";
+] in
+let has_static_lib name =
+  List.exists (fun dir ->
+    Sys.file_exists (Filename.concat dir ("lib" ^ name ^ ".a"))
+  ) std_lib_dirs
+in
+let libs_private =
+  List.filter_map (fun name ->
+    if has_static_lib name then Some ("-l" ^ name) else None
+  ) ["z"; "snappy"; "lz4"; "bz2"; "zstd"]
+  @ ["-ldl"; "-lpthread"; "-lstdc++"]
+in
+let pc_dir = Sys.getcwd () in
+let oc = open_out (Filename.concat pc_dir "rocksdb.pc") in
+fprintf oc "Name: rocksdb\nDescription: RocksDB static override\nVersion: %d.%d\nLibs: -lrocksdb\nLibs.private: %s\nCflags:\n"
+  major minor (String.concat " " libs_private);
+close_out oc;
+let existing = match Sys.getenv_opt "PKG_CONFIG_PATH" with
+  | Some s -> ":" ^ s
+  | None -> ""
+in
+let () = Unix.putenv "PKG_CONFIG_PATH" (pc_dir ^ existing) in
+let () = Unix.putenv "PKG_CONFIG_ARGN" "--static" in
 
 (* Try pkg-config first; fall back to manual path search *)
 let c_flags, link_flags =
@@ -124,7 +101,19 @@ in
 
 (* Locate the directory containing version.h for the version check *)
 let include_dir =
-  match find_include_dir c_flags known_paths with
+  match
+    let from_flags = List.filter_map (fun f ->
+      if String.length f > 2 && String.sub f 0 2 = "-I" then begin
+        let dir = String.sub f 2 (String.length f - 2) in
+        if Sys.file_exists (dir ^ "/version.h") then Some dir
+        else if Sys.file_exists (dir ^ "/rocksdb/version.h") then Some (dir ^ "/rocksdb")
+        else None
+      end else None) c_flags
+    in
+    match from_flags with
+    | dir :: _ -> Some dir
+    | [] -> List.find_opt (fun p -> Sys.file_exists (p ^ "/version.h")) known_paths
+  with
   | Some dir -> dir
   | None ->
     eprintf "failed to locate rocksdb/version.h\n";

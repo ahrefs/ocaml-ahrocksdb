@@ -21,5 +21,5 @@
 
 (rule
  (targets c_flags.sexp c_library_flags.sexp c_flags.txt c_library_flags.txt)
- (deps    (:discover config/discover.exe) (env_var ROCKSDB_LINK_MODE))
+ (deps    (:discover config/discover.exe))
  (action  (run %{discover})))
