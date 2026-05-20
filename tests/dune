@@ -3,8 +3,8 @@
  (libraries rocksdb astring rresult bos cryptokit alcotest)
 )
 
-(alias
- (name    runtest)
+(rule
+ (alias   runtest)
  (deps    test.exe)
  (action (run %{deps}))
 )
