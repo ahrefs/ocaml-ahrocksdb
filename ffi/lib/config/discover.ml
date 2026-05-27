@@ -7,13 +7,13 @@ module C = Configurator.V1
 let () = C.main ~name:"librocksdb" begin fun c ->
 
 let c_flags, link_flags =
+  (* need system cflags otherwise `<rocks/c.h>` can't be `#include`d *)
+  Unix.putenv "PKG_CONFIG_ALLOW_SYSTEM_CFLAGS" "1";
   match C.Pkg_config.get c with
   | None ->
     eprintf "discover requires pkg-config\n";
     C.die "discover error"
   | Some pc ->
-      (* need system cflags otherwise `<rocks/c.h>` can't be `#include`d *)
-      Unix.putenv "PKG_CONFIG_ALLOW_SYSTEM_CFLAGS" "1";
       let expr = sprintf "rocksdb >= %d.%d" minimum_rocks_major minimum_rocks_minor in
       match C.Pkg_config.query_expr_err pc ~package:"rocksdb" ~expr with
       | Error s ->
