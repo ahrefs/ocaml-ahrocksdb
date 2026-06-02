@@ -1,7 +1,7 @@
 let prefix = "rocksdb_stub"
 
 let prologue = "
-#include <c.h>
+#include <rocksdb/c.h>
 "
 
 let () =

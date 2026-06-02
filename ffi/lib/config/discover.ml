@@ -1,65 +1,16 @@
-open Printf
+open Configurator.V1
 
-let minimum_rocks_major, minimum_rocks_minor = 5, 14
-
-module C = Configurator.V1
-
-let () = C.main ~name:"librocksdb" begin fun c ->
-let link_flags = ["-lrocksdb"] in
-
-let known_paths = [
-  "/usr/local/include/rocksdb";
-  "/usr/include/rocksdb";
-] in
-
-let include_test = {|
-
-#include <c.h>
-#include <version.h>
-
-int main() {
-  rocksdb_options_t* opt = rocksdb_options_create();
-  rocksdb_options_destroy(opt);
-  return 0;
-};
-
-|}
-in
-
-(* version.h includes <string> (but the C api headers don't so c++ is not needed to actually compile the bindings, only to check the version) *)
-let c_flag = List.find_opt (fun c_flag -> C.c_test c ~c_flags:["-I" ^ c_flag; "-x"; "c++"] ~link_flags include_test) known_paths in
-
-match c_flag with
-| None ->
-
-   eprintf "failed to find an include path for RocksDB: are development headers installed on your system ?\n";
-   eprintf "tested paths: %s\n" (String.concat " " known_paths);
-   C.die "discover error"
-
-| Some c_flag -> try
-
-   let version_path = c_flag ^ "/version.h" in
-   (* too much configurator magic
-      somehow gcc 12 with -O2 compiles the constant unused strings away and so the object file pattern search fails, printing would have just worked
-    *)
-   let assoc = C.C_define.import c ~c_flags:["-O0"; "-x"; "c++"] ~includes:[ version_path ] ["ROCKSDB_MAJOR", Int; "ROCKSDB_MINOR", Int] in
-   let expect_int name =
-     match List.assoc_opt name assoc with
-     | Some (Int i) -> i
-     | Some _ -> failwith (sprintf "%s is not an int in %s" name version_path)
-     | None -> failwith (sprintf "could not find %s in %s" name version_path)
-   in
-
-   let major = expect_int "ROCKSDB_MAJOR" in
-   let minor = expect_int "ROCKSDB_MINOR" in
-   if (major, minor) < (minimum_rocks_major, minimum_rocks_minor) then
-     failwith (sprintf "installed RocksDB installation is too old: found %d.%d, expected %d.%d minimum" major minor minimum_rocks_major minimum_rocks_minor);
-
-   C.Flags.write_sexp "c_flags.sexp"         ["-I" ^ c_flag];
-   C.Flags.write_sexp "c_library_flags.sexp" link_flags;
-   C.Flags.write_lines "c_flags.txt"         ["-I" ^ c_flag];
-   C.Flags.write_lines "c_library_flags.txt" link_flags
-
-  with Failure s -> C.die "failure: %s" s
-
+let () = main ~name:"librocksdb" begin fun c ->
+  let c_flags, link_flags =
+    match Pkg_config.get c with
+    | None -> die "discover requires pkg-config"
+    | Some pc ->
+    match Pkg_config.query_expr_err pc ~package:"rocksdb" ~expr:"rocksdb >= 5.14" with
+      | Error s -> die "pkg-config query error: %s" s;
+      | Ok { Pkg_config.cflags; libs} -> cflags, libs
+  in
+  Flags.write_sexp  "c_flags.sexp"          c_flags;
+  Flags.write_sexp  "c_library_flags.sexp"  link_flags;
+  Flags.write_lines "c_flags.txt"           c_flags;
+  Flags.write_lines "c_library_flags.txt"   link_flags;
 end
