@@ -13,15 +13,20 @@ let input_all_lines ic =
 let pkg_config_raw c ~args ~package =
   let args = args @ [ package ] in
   match Process.run c "pkg-config" args with
-  | { exit_code = 0; stdout; _ } -> stdout
-  | { stderr; stdout; exit_code } -> die "pkg-config %s: exit %d: %S %S" (String.concat " " args) exit_code stdout stderr
+  | { exit_code = 0; stdout; _ } -> Ok stdout
+  | { stderr; _ } -> Error stderr
+let std_lib_dirs = [
+  "/usr/lib"; "/usr/lib/x86_64-linux-gnu"; "/usr/lib/aarch64-linux-gnu";
+  "/usr/local/lib"; "/usr/lib64";
+]
 
 let () = main ~name:"librocksdb" begin fun c ->
 
 (* Part1: tweak librocksdb's incomplete pkg-config file *)
 let has_static_lib name =
-  let libdir = pkg_config_raw c ~args:["--keep-system-libs"; "--libs-only-L"] ~package:name in
-  Sys.file_exists (Filename.concat libdir ("lib" ^ name ^ ".a"))
+  List.exists (fun dir ->
+    Sys.file_exists (Filename.concat dir ("lib" ^ name ^ ".a"))
+  ) std_lib_dirs
 in
 let libs_private =
   List.filter_map (fun name ->
@@ -29,7 +34,11 @@ let libs_private =
   ) ["z"; "snappy"; "lz4"; "bz2"; "zstd"]
   @ ["-ldl"; "-lpthread"; "-lstdc++"]
 in
-let pc_orig_path = pkg_config_raw c ~args:["--path"] ~package:"rocksdb" in
+let pc_orig_path =
+  match pkg_config_raw c ~args:["--path"] ~package:"rocksdb" with
+  | Error s -> die "cannot find rocksdb pkg-config file: %S" s
+  | Ok path -> path
+in
 let pc_orig =
   let ic = open_in (String.trim pc_orig_path) in
   let r = input_all_lines ic in
@@ -46,7 +55,7 @@ in
 (* patch PKG_CONFIG_PATH to allow discovery of patched .pc *)
 let () = match Sys.getenv_opt "PKG_CONFIG_PATH" with
   | Some s -> Unix.putenv "PKG_CONFIG_PATH" (localdir ^ ":" ^ s)
-  | None -> ()
+  | None -> Unix.putenv "PKG_CONFIG_PATH" localdir
 in
 
 (* Part2: actual configure *)
