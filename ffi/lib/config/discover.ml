@@ -59,8 +59,6 @@ let () = match Sys.getenv_opt "PKG_CONFIG_PATH" with
 in
 
 (* Part2: actual configure *)
-  (* need system cflags otherwise `<rocks/c.h>` can't be `#include`d *)
-  Unix.putenv "PKG_CONFIG_ALLOW_SYSTEM_CFLAGS" "1";
   Unix.putenv "PKG_CONFIG_ARGN" "--static";
   let c_flags, link_flags =
     match Pkg_config.get c with
