@@ -1,0 +1,8 @@
+(executable
+ (name hello_rocksdb)
+ (link_flags
+  -cc
+  "%{cc} -Wl,-Bstatic"
+  -cclib
+  -Wl,-Bdynamic)
+ (libraries ahrocksdb))
